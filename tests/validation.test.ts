@@ -134,6 +134,72 @@ describe('validateStory', () => {
   });
 });
 
+describe('validateStory — timed decisions', () => {
+  /** A valid timed decision: the fixture's first choice is unconditional. */
+  function timedStory(timed: { durationMs: number; defaultChoiceId: string }): StoryDefinition {
+    return storyWith((story) => {
+      const scene = sceneAt(story, 0);
+      scene.timedDecision = timed;
+    });
+  }
+
+  it('accepts a timed decision whose default is an unconditional choice', () => {
+    const firstChoiceId = makeTestStory().scenes[0]?.choices[0]?.id ?? '';
+    expect(validateStory(timedStory({ durationMs: 12000, defaultChoiceId: firstChoiceId })).ok).toBe(
+      true,
+    );
+  });
+
+  it('rejects a duration that is not a positive finite number', () => {
+    const firstChoiceId = makeTestStory().scenes[0]?.choices[0]?.id ?? '';
+    for (const durationMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const result = validateStory(timedStory({ durationMs, defaultChoiceId: firstChoiceId }));
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.errors.map((error) => error.code)).toContain('INVALID_TIMED_DECISION');
+      expect(result.errors.map((error) => error.message).join(' ')).toMatch(
+        /duration must be a positive number/,
+      );
+    }
+  });
+
+  it('rejects a default choice that does not exist in the scene', () => {
+    const result = validateStory(timedStory({ durationMs: 8000, defaultChoiceId: 'not-a-choice' }));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map((error) => error.message).join(' ')).toMatch(/does not exist in scene/);
+  });
+
+  it('rejects a default choice that could be unavailable when the timer fires', () => {
+    const story = storyWith((mutable) => {
+      const scene = sceneAt(mutable, 0);
+      // Give the default a condition, so it could legitimately be unavailable.
+      const choice = scene.choices[0];
+      if (choice === undefined) {
+        throw new Error('fixture scene must have a choice');
+      }
+      choice.condition = {
+        kind: 'compareVariable',
+        variable: 'courage',
+        operator: 'gte',
+        value: 3,
+      };
+      scene.timedDecision = {
+        durationMs: 5000,
+        defaultChoiceId: choice.id,
+      };
+    });
+
+    const result = validateStory(story);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map((error) => error.code)).toContain('INVALID_TIMED_DECISION');
+    expect(result.errors.map((error) => error.message).join(' ')).toMatch(
+      /must always be selectable/,
+    );
+  });
+});
+
 describe('createStoryEngine', () => {
   it('throws a StoryDefinitionError with a readable message for invalid stories', () => {
     const story = storyWith((draft) => {

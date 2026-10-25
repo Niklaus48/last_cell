@@ -316,11 +316,23 @@ function checkScene(
     if (!Number.isFinite(scene.timedDecision.durationMs) || scene.timedDecision.durationMs <= 0) {
       report({ code: 'INVALID_TIMED_DECISION', path: `${timedPath}.durationMs`, message: 'Timed decision duration must be a positive number of milliseconds.' });
     }
-    if (!choiceIds.has(scene.timedDecision.defaultChoiceId)) {
+    const defaultChoice = scene.choices.find(
+      (choice) => choice.id === scene.timedDecision?.defaultChoiceId,
+    );
+    if (defaultChoice === undefined) {
       report({
         code: 'INVALID_TIMED_DECISION',
         path: `${timedPath}.defaultChoiceId`,
         message: `Timed decision default choice "${scene.timedDecision.defaultChoiceId}" does not exist in scene "${scene.id}".`,
+      });
+    } else if (defaultChoice.condition !== undefined) {
+      // A timeout must always be able to fire. A conditional default could be
+      // unavailable at expiry, and the engine must never substitute some other
+      // choice: that would take a decision the player never made.
+      report({
+        code: 'INVALID_TIMED_DECISION',
+        path: `${timedPath}.defaultChoiceId`,
+        message: `Timed decision default choice "${defaultChoice.id}" has a condition; a timeout default must always be selectable.`,
       });
     }
   }

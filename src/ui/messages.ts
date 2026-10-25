@@ -3,6 +3,7 @@
  * Keeping the mapping in the UI layer means the engine stays language-agnostic.
  */
 import type { StoryErrorCode } from '../story/engine';
+import type { SaveErrorCode } from '../persistence';
 
 const messages: Readonly<Record<StoryErrorCode, string>> = {
   INVALID_CHOICE: 'این انتخاب در این صحنه وجود ندارد.',
@@ -23,3 +24,28 @@ const messages: Readonly<Record<StoryErrorCode, string>> = {
 export function toPersianError(code: StoryErrorCode): string {
   return messages[code];
 }
+
+/**
+ * Persian copy for local save/load failures. Kept beside the engine messages so
+ * every player-facing string in the app lives in one file.
+ */
+const saveMessages: Readonly<Record<SaveErrorCode, string>> = {
+  NO_SAVE: 'ذخیره‌ای برای ادامه پیدا نشد.',
+  STORAGE_UNAVAILABLE:
+    'مرورگر اجازهٔ ذخیره‌سازی محلی نمی‌دهد؛ بازی در همین نشست ادامه پیدا می‌کند.',
+  STORAGE_FULL: 'حافظهٔ محلی مرورگر پر شده است؛ ذخیره انجام نشد.',
+  MALFORMED_SAVE: 'دادهٔ ذخیره‌شده خراب است و خوانده نمی‌شود.',
+  INCOMPATIBLE_SAVE: 'این ذخیره با نسخهٔ فعلی بازی سازگار نیست.',
+  WRONG_STORY: 'این ذخیره به فصل دیگری تعلق دارد.',
+  INVALID_STATE: 'وضعیت ذخیره‌شده معتبر نیست؛ بازی از همان‌جا ادامه پیدا نکرد.',
+};
+
+export function toPersianSaveMessage(code: SaveErrorCode): string {
+  return saveMessages[code];
+}
+
+export const SAVE_SUCCESS_MESSAGE = 'بازی ذخیره شد.';
+export const LOAD_SUCCESS_MESSAGE = 'بازی از ذخیرهٔ محلی ادامه پیدا کرد.';
+export const SAVE_NONE_MESSAGE = 'هنوز ذخیره‌ای وجود ندارد.';
+export const SAVE_INVALID_HINT = 'ذخیرهٔ موجود قابل استفاده نیست.';
+export const SAVE_STORAGE_DISABLED_HINT = 'ذخیره‌سازی محلی در این مرورگر در دسترس نیست.';

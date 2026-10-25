@@ -22,7 +22,15 @@ export function ChoiceList({ choices, onSelect, disabled = false }: ChoiceListPr
           <button
             type="button"
             className="choice-button"
-            onClick={() => onSelect(choice.id)}
+            onClick={(event) => {
+              // `detail > 1` means this is the second click of a double click.
+              // Ignoring it prevents a stray click landing on whichever choice
+              // happens to sit at the same spot in the next scene.
+              if (event.detail > 1) {
+                return;
+              }
+              onSelect(choice.id);
+            }}
             disabled={disabled}
           >
             <span className="choice-button__index" aria-hidden="true">

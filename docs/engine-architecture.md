@@ -375,6 +375,76 @@ chapter compares against a threshold inside that window, and because the story u
 
 ---
 
+## Timed decisions and persistence (Phase 4)
+
+### Where a countdown lives
+
+The engine still executes nothing on a schedule. `SceneDefinition.timedDecision`
+(`{ durationMs, defaultChoiceId }`) is *data*, and validation now enforces three things:
+
+1. `durationMs` is a positive, finite number of milliseconds;
+2. `defaultChoiceId` names a choice that exists in the same scene;
+3. that default is **unconditional** — a timeout must always be able to fire, and substituting a
+   different choice would take a decision the player never made.
+
+```
+story data (timedDecision)
+        │
+     useTimedDecision  ── deadline = now() + durationMs, tick = 200 ms
+        │                 (recomputes remaining; never decrements a counter)
+        ▼
+   onExpire({ sceneId, choiceId })   ← fires at most once per decision
+        │
+   useStorySession.commit(sceneId, choiceId)   ← exactly the manual-choice path
+        │
+     engine.choose(...)   ← conditions, effects, checkpoints, history, transition validation
+```
+
+`useTimedDecision` (`src/app/`) owns one countdown per decision identity
+(`epoch#scene#pathLength#duration`). The identity changes when the scene changes, when the run moves,
+or when the session is replaced (start/restart/recover/load), so a restored run always gets a full
+duration and an old deadline can never fire into a new scene. Re-renders that do not change the
+identity — including every tick — never restart it, so narration is not replayed.
+
+The displayed value comes from `src/app/timing.ts` (pure): `computeCountdown(duration, deadline, now)`
+clamps to `[0, duration]`, rounds seconds up, and reports expiry. Because it is derived from
+`now() - deadline`, a throttled tab that misses callbacks catches up instead of stretching the
+decision; `visibilitychange` simply triggers one recomputation, and the single-fire guard means an
+expired decision resolves once.
+
+### Where a save lives
+
+```
+src/persistence/
+  storage.ts     # localStorage adapter: namespaced key, probed once, may return null
+  saveGame.ts    # envelope + typed results; delegates ALL state validation to the engine
+  replay.ts      # rebuilds in-session checkpoints by replaying saved history
+```
+
+The envelope (`format`, `formatVersion`, `storyKey`, `savedAt`, `snapshot`) is written as JSON under
+`last-cell.save.v1`. Loading walks a fixed order — parse → format tag → envelope version → story
+key → `engine.restoreSnapshot` — and returns a typed failure instead of throwing. The engine remains
+the authority on state validity: nothing is restored unless `restoreSnapshot` accepts it, and the
+checks it applies (snapshot `schemaVersion`, `storyId`, current scene, progress, variables, clue
+ids, history/scene consistency) are the same ones used for in-memory `restore`.
+
+Checkpoints are not part of the snapshot, so `rebuildCheckpoints` replays the saved `history`
+through `engine.choose` and re-takes declared checkpoints as it passes their scenes. The engine is
+deterministic, so this reconstructs the player's real states rather than inventing new ones — this
+is what keeps a saved failure recoverable.
+
+### Testing time without waiting
+
+`tests/timing.test.ts` (Node) covers the arithmetic. `tests/timedDecision.test.tsx` (jsdom) injects
+a manual clock through `useStorySession(..., { now })` and uses fake timers only to run interval
+callbacks, which is what makes these cases deterministic:
+
+* clock advanced **with** timers → normal foreground expiry;
+* clock advanced **without** timers → a throttled background tab, then `visibilitychange`;
+* clock frozen while timers run → ticks that cannot change the outcome.
+
+---
+
 ## Implemented vs deferred
 
 **Implemented (Phase 2):** typed atomic transitions with change summaries, declarative
@@ -388,9 +458,13 @@ validation for every reference above.
 proving reachability, gating and recovery. The app loads `chapter1` by default; the demo story is
 retained as a dev fixture.
 
-**Modelled/validated but not executed:** `timedDecision` (no timers, no countdowns). Chapter 1
-declares two: 12 s at the stranger's arrival (default: silence) and 8 s at the guarded door
-(default: freeze and observe).
+**Implemented (Phase 4):** executed timed decisions driven by the existing story data (12 s →
+silence, 8 s → freeze-and-observe) with single-fire expiry, stale-timer protection, background-tab
+catch-up and a restrained accessible countdown; local save/resume on the existing snapshot format
+with full validation, typed failures and checkpoint replay; 69 new tests.
+
+**Deferred (Phase 4 non-goals):** multiple save slots, save export/import, cloud sync, encryption,
+pausing a countdown while a tab is hidden.
 
 **Deferred:** Chapters 2+, flowchart UI, save/load UI and any browser
 persistence, inventory/items, artwork, audio, Capacitor/Android packaging, backend

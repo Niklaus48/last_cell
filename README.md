@@ -4,15 +4,18 @@ A Persian-language, choice-driven narrative game. The player follows **Kian Fara
 experienced Iranian operative held in a fictional high-security prison; the game leans on
 psychological suspense, investigation, hidden information and branching outcomes.
 
-This repository currently contains **Phases 1–3: the foundation, a hardened React-independent
-story engine, and the complete canonical Chapter 1 narrative** («شش ماه سکوت»). Timed-decision
-execution, save/load UI, artwork, audio and Android packaging are *not* implemented yet.
+This repository currently contains **Phases 1–4: the foundation, a hardened React-independent
+story engine, the complete canonical Chapter 1 narrative** («شش ماه سکوت»), **live timed
+decisions and local saves**. Artwork, audio, cloud saves and Android packaging are *not*
+implemented.
 
 * Phase 1 — React + Vite foundation, first engine, demo story, tests.
 * Phase 2 — declarative conditions/effects hardening, structured clue tracking, checkpoints,
   recoverable failures, versioned snapshots, extended validation.
 * Phase 3 — Chapter 1: 32 scenes, 69 choices, 6 clues, 3 tiered endings, 3 checkpoints,
   2 recoverable failures, all pure data.
+* Phase 4 — the chapter is playable under pressure: real countdowns that resolve to the
+  declared default, and local save/resume built on the existing snapshot format.
 
 Chapter 1 narrative design and its consistency review:
 **[docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md)**.
@@ -110,6 +113,48 @@ acts: the cell before dawn, the stranger at the bars, the escape itself, two inv
 (the warden's office, riskier; the cafeteria and service corridor, quieter), the locked door, the
 old telephone, and three endings. Design notes, gating rules and the consistency review live in
 [docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md).
+
+### Timed decisions
+
+Two Chapter 1 scenes declare a countdown in the story data — the stranger at the cell
+(12 s, default **silence**) and the guarded door (8 s, default **freeze and observe**). The UI
+reads those values from the content; it hard-codes neither the durations nor the defaults.
+
+* While a decision is active, the scene shows its choices plus a countdown (`زمان تصمیم: ۹ ثانیه`)
+  and a progress bar. The time is text first, so it survives `prefers-reduced-motion`, a greyscale
+  screen and a screen reader.
+* If the timer reaches zero, the declared default is applied **exactly once, through the normal
+  engine path** — conditions, effects, checkpoints, history and transition validation all run
+  as they would for a click. Silent expiry therefore awards no clue and records the choice in the
+  history like any other.
+* Choosing manually before expiry cancels the pending timeout. A manual choice and a timeout
+  landing in the same tick resolve once: the run applies one choice and moves one scene.
+* A scene change, an ending, a failure, a recovery, a load or an unmount clears the countdown. A
+  stale timer can never resolve a decision in a later scene.
+* **Background tabs:** the countdown is computed from an absolute deadline and a monotonic clock,
+  never by counting ticks. A throttled tab that misses callbacks catches up on return (via
+  `visibilitychange`) and an already-expired decision resolves once, immediately.
+* **Loading a save mid-decision restarts the full declared duration.** The snapshot stores run
+  state, not remaining time, so a resumed run always gets the whole window rather than a deadline
+  inherited from before the save (documented, and asserted by a test).
+
+### Saving and resuming
+
+* The game screen has **ذخیره**; the title screen has **ادامه از ذخیرهٔ محلی**, disabled with an
+  explanation when there is nothing usable to resume.
+* Overwriting an existing save asks first (inline confirmation, no modal framework).
+* Saves live in `localStorage` under the namespaced key `last-cell.save.v1` — one slot, **this
+  browser and this origin only**. They are not encrypted, not synced across devices, and contain
+  no credentials or personal data — just the run state.
+* A save is accepted only if the engine validates it: envelope format and version, story key, then
+  `restoreSnapshot` checks snapshot schema version, story identity, current scene, progress,
+  variables, clues and history consistency. Any failure is reported in Persian and **leaves the
+  current in-memory run untouched**; a corrupt save is never partially loaded and never overwrites
+  a valid one.
+* A restored run keeps its variables, clues, history and route. Checkpoints are not stored in the
+  snapshot; they are rebuilt by replaying the saved history through the public engine API, so a
+  saved failure can still be recovered. Storage being unavailable, full or disabled degrades to
+  "no saves" without breaking play.
 
 ### The dev fixture
 
@@ -274,7 +319,7 @@ Design decisions worth knowing:
 
 ## Tests
 
-`npm run test` currently runs **209 tests in 13 files**:
+`npm run test` currently runs **278 tests in 17 files**:
 
 | File | Tests | Covers |
 | --- | --- | --- |
@@ -284,22 +329,29 @@ Design decisions worth knowing:
 | `tests/clues.test.ts` | 7 | discovery, record exposure, re-discovery, gating, no description leakage |
 | `tests/checkpoints.test.ts` | 22 | opportunities, creation, snapshot isolation, restore, recoverable vs terminal failures, recovery semantics, invalid checkpoints |
 | `tests/snapshots.test.ts` | 11 | JSON round-trip, JSON-safety walk, invalid-snapshot diagnostics, independence, strict `restore` |
-| `tests/validation.test.ts` | 26 | scene/choice/ending/failure/checkpoint/clue/condition/effect errors, malformed arrays |
+| `tests/validation.test.ts` | 30 | scene/choice/ending/failure/checkpoint/clue/condition/effect errors, malformed arrays, timed-decision duration/default/unavailable-default rules |
 | `tests/demoStory.test.ts` | 10 | demo validity, branches, endings, clue gating, checkpoint + failure recovery |
 | `tests/content.test.ts` | 7 | story content is declarative JSON data (no functions/classes) |
 | `tests/enginePurity.test.ts` | 13 | engine stays React/DOM/storage-free; `any` never appears; imports stay in-layer |
 | `tests/app.test.tsx` | 6 | RTL/jsdom: Chapter 1 default load, demo-fixture playthrough, ending, failure screen, recovery, restart |
 | `tests/chapter1.content.test.ts` | 26 | Chapter 1 validation, unique ids, declared refs, reachability of every scene/choice/ending/failure, no dead ends, Persian-only text, timers, checkpoint placement, no functions in data |
 | `tests/chapter1.playthrough.test.ts` | 28 | Chapter 1 branches: three stranger choices, silence reveals nothing, note via its action only, both routes and their convergence, clue-gated options, ending A/B/C gating, checkpoint recovery and rollback |
+| `tests/timing.test.ts` | 8 | countdown arithmetic: deadline maths, clamping, rounding, urgency buckets |
+| `tests/timedDecision.test.tsx` | 25 | 12 s → silence, 8 s → freeze-and-observe, manual-vs-timeout races, stale timers, unmount, background tabs, restart-on-load, no narration replay, live-region restraint, invalid timer data |
+| `tests/saveGame.test.ts` | 20 | save/load round trip, clue/variable/history preservation, terminal states, missing/malformed/incompatible/wrong-story/tampered data, schema and story identity, storage exceptions and quota |
+| `tests/saveSession.test.tsx` | 12 | session save/resume, checkpoint rebuild after load, recovery from a loaded failure, stale timers across load, corrupt save leaves the run intact, resume/overwrite/unavailable-storage UI |
 
 ---
 
-## Known limitations (Phase 3 scope)
+## Known limitations (Phase 4 scope)
 
 * Chapter 1 is complete as *content*; Chapters 2+ are not written. The three endings each carry a
   Chapter-2 hook, but no Chapter 2 exists yet.
-* Timed decisions are modelled and validated but **not executed** (no timers, no countdown UI), so
-  the 12 s / 8 s pressure in Chapter 1 is a design contract rather than a played experience.
+* Saves are a single local slot per browser origin: no multiple slots, no export/import, no cloud
+  sync, no encryption. Clearing site data deletes the save.
+* The countdown is wall-clock based, so a backgrounded decision can expire while the tab is hidden;
+  the player returns to its aftermath rather than to a paused timer. This is deliberate (the scene
+  is under time pressure) and documented, not an oversight.
 * No save/load UI and no browser persistence: `serializeState`/`restoreSnapshot` are ready,
   storage is deliberately absent. Checkpoints live in memory for the current session only.
 * Clues are tracked and gated, but there is no clue-inventory screen, investigation UI,

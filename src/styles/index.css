@@ -249,3 +249,138 @@ kbd {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Save / load controls (Phase 4) ---------- */
+.button--secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+/* Compact dismissal "×" that stays a real 44px target on touch. */
+.button--inline {
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  padding: 0 var(--space-3);
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.save-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.save-notice--muted {
+  color: var(--color-text-muted);
+}
+
+.confirm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent);
+  background: rgb(184 118 58 / 12%);
+}
+
+.confirm-row__text {
+  flex: 1 1 12rem;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+/* ---------- Timed decisions (Phase 4) ---------- */
+/*
+ * Remaining time is carried by text; the bar is reinforcement only. Nothing
+ * here relies on motion to convey how much time is left, so `prefers-reduced-
+ * motion` (which globally kills transitions) loses no information.
+ */
+.timed-decision {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: rgb(255 255 255 / 3%);
+  /* Keep the countdown in view above the choice buttons on short screens. */
+  position: sticky;
+  inset-block-end: var(--space-2);
+  z-index: 1;
+}
+
+.timed-decision--urgent {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+}
+
+.timed-decision__head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.timed-decision__label {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: start;
+}
+
+.timed-decision--urgent .timed-decision__label {
+  color: var(--color-danger-text);
+}
+
+.timed-decision__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.timed-decision__track {
+  block-size: 0.375rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 8%);
+  overflow: hidden;
+}
+
+.timed-decision__fill {
+  display: block;
+  block-size: 100%;
+  background: var(--color-accent);
+  transition: inline-size 180ms linear;
+}
+
+.timed-decision--urgent .timed-decision__fill {
+  background: var(--color-danger-border);
+}
+
+/* Screen-reader-only text (used for the single urgency announcement). */
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
