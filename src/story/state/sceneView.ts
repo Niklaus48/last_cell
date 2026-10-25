@@ -28,6 +28,14 @@ const visualAssets: Readonly<Record<string, VisualAsset>> = {
   'cell-night': { id: 'cell-night', backdrop: 'linear-gradient(160deg, #0d1016 0%, #141a22 45%, #0a0c10 100%)' },
   corridor: { id: 'corridor', backdrop: 'linear-gradient(160deg, #0a0d12 0%, #101720 55%, #070a0e 100%)' },
   'interrogation-room': { id: 'interrogation-room', backdrop: 'linear-gradient(160deg, #171011 0%, #1d1518 50%, #0b0809 100%)' },
+  // Chapter 1 locations (local gradients only — nothing is fetched).
+  'cell-interior': { id: 'cell-interior', backdrop: 'linear-gradient(170deg, #0c0f14 0%, #161b23 48%, #080a0d 100%)' },
+  office: { id: 'office', backdrop: 'linear-gradient(165deg, #12100c 0%, #1d1a12 52%, #0a0906 100%)' },
+  cafeteria: { id: 'cafeteria', backdrop: 'linear-gradient(165deg, #0b1113 0%, #131e21 50%, #070c0e 100%)' },
+  'service-corridor': { id: 'service-corridor', backdrop: 'linear-gradient(165deg, #0a0f10 0%, #121a1b 55%, #060a0b 100%)' },
+  door: { id: 'door', backdrop: 'linear-gradient(160deg, #0d0f12 0%, #191c20 50%, #08090b 100%)' },
+  alcove: { id: 'alcove', backdrop: 'linear-gradient(165deg, #0e1014 0%, #1a1d24 52%, #090a0d 100%)' },
+  gate: { id: 'gate', backdrop: 'linear-gradient(170deg, #080b10 0%, #101822 55%, #05070a 100%)' },
 };
 
 const fallbackAsset: VisualAsset = {

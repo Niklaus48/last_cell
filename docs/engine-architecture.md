@@ -318,6 +318,61 @@ Architectural guards that run in CI:
   and survives a JSON round-trip.
 * ESLint `no-restricted-imports` / `no-restricted-globals` for `src/story/engine/**`.
 
+
+---
+
+## Chapter 1 content architecture (Phase 3)
+
+Chapter 1 («شش ماه سکوت») is the canonical story. It is **pure declarative data** — the engine
+gained no story-specific branch, no new API and no new dependency to support it.
+
+```
+src/story/content/
+  index.ts             # StoryKey = 'chapter1' | 'demo', DEFAULT_STORY_KEY = 'chapter1'
+  chapter1/
+    ids.ts             # every id + `chapter1Clues` registry (the only place clue text lives)
+    endings.ts         # 3 endings, 3 checkpoints, 2 recoverable failures
+    scenes.onset.ts    # Acts I–III (11 scenes): cell, stranger, note, corridor
+    scenes.routes.ts   # Acts IV–V (12 scenes): office route, service route, junction, door, guard
+    scenes.finale.ts   # Acts VI–VII (9 scenes): archive, telephone, final approach, ending paths
+    index.ts           # `chapter1Story: StoryDefinition` + `chapter1InitialVariables`
+  demoStory.ts         # dev fixture, registered as 'demo', used by UI tests
+```
+
+Why the files are split by act rather than by type: a chapter is read as a sequence, and the
+scene files are long prose. Splitting by act keeps each file reviewable, while `ids.ts` stays the
+single source of truth for cross-references (a scene file never invents an id).
+
+**Rules the content obeys** (enforced by `tests/chapter1.content.test.ts` and
+`tests/content.test.ts`):
+
+* no functions, classes, React imports or non-JSON values anywhere in the story object;
+* every id referenced by a transition, effect, condition, failure recovery, checkpoint or ending
+  is declared — `validateStory` rejects the story otherwise;
+* no `visitedScene` conditions, so no scene can ask about a path the player did not take;
+* every scene has at least one unconditional choice (no dead ends, no key-only doors);
+* Persian text only for titles, narration and choice labels; no ids or engine terms in prose.
+
+**Variables (8)** are only kept when they change an outcome: `composure` (gates two recovering
+options), `guardSuspicion` (gates the alcove), `planIntegrity` (gates the bolt and the safe-corner
+fall-back, and is spent by both), `strangerContact` (gates the telephone and the Ending-C line),
+`strangerTrust` (Ending C), `strangerKnowledge` (Ending C), `routeKnowledge` (gates the vent
+alternative) and `criticalMistakes` (Ending C ceiling). There is no score and no ending keyed on a
+clue count.
+
+**Ending gating.** A (ambiguous truth) is the unconditional path — reachable with zero clues.
+B (contradictory dossier) requires the specific `death_record_contradiction` clue. C (possible
+connection) requires that clue *plus* one corroborating clue, an open line to the stranger
+(`strangerContact ≥ 1`, `strangerKnowledge ≥ 2`) and at most one critical mistake; without them the
+scene falls back to A, so a run never dead-ends and never reveals two endings.
+
+**Testing a story's whole state space.** `tests/chapter1.content.test.ts` explores every reachable
+state (breadth-first over all legal choices) to prove that all 32 scenes, all 69 choices, all 3
+endings and both failures are reachable and that nothing dead-ends. Node values are canonicalised
+into `[-1, 2]` purely to keep that search finite: sound here because every condition in the
+chapter compares against a threshold inside that window, and because the story uses no
+`visitedScene` conditions (both assumptions are asserted in the test file rather than assumed).
+
 ---
 
 ## Implemented vs deferred
@@ -326,11 +381,18 @@ Architectural guards that run in CI:
 conditions (incl. clues), validated effects with atomic failure, clue discovery + gating,
 derived scene/choice history and transitions, declared checkpoints, recoverable/terminal
 failures with snapshot recovery, versioned JSON snapshots with full validation, story
-validation for every reference above, 154 automated tests.
+validation for every reference above.
 
-**Modelled/validated but not executed:** `timedDecision` (no timers, no countdowns).
+**Implemented (Phase 3):** the canonical Chapter 1 story as pure data — 32 scenes, 69 choices,
+6 clues, 3 endings, 3 checkpoints, 2 recoverable failures, with 54 content/playthrough tests
+proving reachability, gating and recovery. The app loads `chapter1` by default; the demo story is
+retained as a dev fixture.
 
-**Deferred:** canonical Chapter 1 content, flowchart UI, save/load UI and any browser
+**Modelled/validated but not executed:** `timedDecision` (no timers, no countdowns). Chapter 1
+declares two: 12 s at the stranger's arrival (default: silence) and 8 s at the guarded door
+(default: freeze and observe).
+
+**Deferred:** Chapters 2+, flowchart UI, save/load UI and any browser
 persistence, inventory/items, artwork, audio, Capacitor/Android packaging, backend
 services. Derived `visitedSceneIds` is intentionally not persisted; a future save format can
 recompute it from `history`.

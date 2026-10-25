@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStorySession } from './useStorySession';
+import { DEFAULT_STORY_KEY, type StoryKey } from '../story/content';
 import {
   toEndingViewModel,
   toFailureViewModel,
@@ -11,13 +12,22 @@ import { GameScreen } from '../ui/screens/GameScreen';
 import { EndingScreen } from '../ui/screens/EndingScreen';
 import { FailureScreen } from '../ui/screens/FailureScreen';
 
+interface AppProps {
+  /**
+   * Which registered story to play. Only tests set this: they pin the
+   * deterministic dev fixture so UI regressions stay isolated from content
+   * edits. The shipped application always uses `DEFAULT_STORY_KEY`.
+   */
+  readonly storyKey?: StoryKey;
+}
+
 /**
  * Top-level screen router. It renders exclusively from data returned by the
  * story layer; it never decides which scene comes next, whether a choice is
  * legal, or what a failure recovers to.
  */
-export function App(): React.ReactElement {
-  const session = useStorySession('demo');
+export function App({ storyKey = DEFAULT_STORY_KEY }: AppProps = {}): React.ReactElement {
+  const session = useStorySession(storyKey);
 
   if (session.session.phase === 'title') {
     return <TitleScreen storyTitle={session.engine.story.title} onStart={session.start} />;

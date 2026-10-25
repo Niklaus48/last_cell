@@ -16,7 +16,7 @@ import {
   type StoryEngineError,
   type StoryState,
 } from '../story/engine';
-import { getStory, type StoryKey } from '../story/content';
+import { DEFAULT_STORY_KEY, getStory, type StoryKey } from '../story/content';
 
 export type SessionPhase =
   | { readonly phase: 'title' }
@@ -43,7 +43,7 @@ const missingCheckpointError: StoryEngineError = {
   message: 'No captured checkpoint matches this failure.',
 };
 
-export function useStorySession(storyKey: StoryKey = 'demo'): StorySession {
+export function useStorySession(storyKey: StoryKey = DEFAULT_STORY_KEY): StorySession {
   const engine = useMemo(() => createStoryEngine(getStory(storyKey)), [storyKey]);
   const [session, setSession] = useState<SessionPhase>({ phase: 'title' });
   const [lastError, setLastError] = useState<StoryEngineError | null>(null);

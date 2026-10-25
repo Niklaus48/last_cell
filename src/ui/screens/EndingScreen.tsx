@@ -29,7 +29,7 @@ export function EndingScreen({ view, onRestart }: EndingScreenProps): React.Reac
       <button type="button" className="button button--primary" onClick={onRestart}>
         بازگشت به آغاز
       </button>
-      <p className="ending-footnote">پایان‌های دیگر در همین نمونه وجود دارد.</p>
+      <p className="ending-footnote">پایان‌های دیگری هم در این فصل وجود دارند.</p>
     </main>
   );
 }

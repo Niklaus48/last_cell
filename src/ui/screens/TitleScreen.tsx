@@ -25,11 +25,9 @@ export function TitleScreen({ onStart, storyTitle }: TitleScreenProps): React.Re
 
       <div className="title-actions">
         <button type="button" className="button button--primary" onClick={onStart}>
-          آغاز نمونهٔ توسعه
+          شروع فصل اول
         </button>
-        <p className="title-actions__note">
-          این نسخه فقط برای آزمون موتور روایت است: {storyTitle}
-        </p>
+        <p className="title-actions__note">{storyTitle}</p>
       </div>
     </main>
   );

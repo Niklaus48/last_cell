@@ -4,13 +4,18 @@ A Persian-language, choice-driven narrative game. The player follows **Kian Fara
 experienced Iranian operative held in a fictional high-security prison; the game leans on
 psychological suspense, investigation, hidden information and branching outcomes.
 
-This repository currently contains **Phases 1–2: the project foundation and a hardened,
-React-independent story engine**. The canonical Chapter 1 story, timed-decision execution,
-save/load UI, artwork, audio and Android packaging are *not* implemented yet.
+This repository currently contains **Phases 1–3: the foundation, a hardened React-independent
+story engine, and the complete canonical Chapter 1 narrative** («شش ماه سکوت»). Timed-decision
+execution, save/load UI, artwork, audio and Android packaging are *not* implemented yet.
 
 * Phase 1 — React + Vite foundation, first engine, demo story, tests.
 * Phase 2 — declarative conditions/effects hardening, structured clue tracking, checkpoints,
   recoverable failures, versioned snapshots, extended validation.
+* Phase 3 — Chapter 1: 32 scenes, 69 choices, 6 clues, 3 tiered endings, 3 checkpoints,
+  2 recoverable failures, all pure data.
+
+Chapter 1 narrative design and its consistency review:
+**[docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md)**.
 
 Engine internals are documented in **[docs/engine-architecture.md](docs/engine-architecture.md)**.
 
@@ -54,7 +59,7 @@ Quality gates:
 ```bash
 npm run typecheck  # tsc -b, strict mode, zero errors expected
 npm run lint       # eslint .
-npm run test       # vitest run (154 tests)
+npm run test       # vitest run (209 tests)
 npm run verify     # typecheck + lint + test + build in one go
 ```
 
@@ -94,15 +99,24 @@ git remote add origin git@github.com:<owner>/<repo>.git   # or https://…
 
 ---
 
-## Playing the demo
+## Playing Chapter 1
 
 1. `npm run dev`
 2. Open the printed URL (mobile viewport recommended; the layout is portrait-first).
-3. Press **آغاز نمونهٔ توسعه** and choose.
+3. Press **شروع فصل اول** and choose.
 
-The demo story (`src/story/content/demoStory.ts`, «اتاق بازجویی») is a **development-only
-fixture**, not Chapter 1. It has 3 scenes, 3 endings, 3 variables, one clue, one declared
-checkpoint and one recoverable failure:
+The application loads `chapter1` by default (`DEFAULT_STORY_KEY`). It is 32 scenes across seven
+acts: the cell before dawn, the stranger at the bars, the escape itself, two investigative routes
+(the warden's office, riskier; the cafeteria and service corridor, quieter), the locked door, the
+old telephone, and three endings. Design notes, gating rules and the consistency review live in
+[docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md).
+
+### The dev fixture
+
+`src/story/content/demoStory.ts` («اتاق بازجویی») is still registered as `demo` — a
+**development-only fixture**, used by the UI tests because it is small and deterministic. It is
+not the shipped story and the app never loads it unless a caller passes `storyKey="demo"`. It has
+3 scenes, 3 endings, 3 variables, one clue, one declared checkpoint and one recoverable failure:
 
 ```
 demo-arrival (سلول ۱۴)
@@ -260,7 +274,7 @@ Design decisions worth knowing:
 
 ## Tests
 
-`npm run test` currently runs **154 tests in 11 files**:
+`npm run test` currently runs **209 tests in 13 files**:
 
 | File | Tests | Covers |
 | --- | --- | --- |
@@ -274,19 +288,22 @@ Design decisions worth knowing:
 | `tests/demoStory.test.ts` | 10 | demo validity, branches, endings, clue gating, checkpoint + failure recovery |
 | `tests/content.test.ts` | 7 | story content is declarative JSON data (no functions/classes) |
 | `tests/enginePurity.test.ts` | 13 | engine stays React/DOM/storage-free; `any` never appears; imports stay in-layer |
-| `tests/app.test.tsx` | 5 | RTL/jsdom: playthrough, ending, failure screen, recovery, restart |
+| `tests/app.test.tsx` | 6 | RTL/jsdom: Chapter 1 default load, demo-fixture playthrough, ending, failure screen, recovery, restart |
+| `tests/chapter1.content.test.ts` | 26 | Chapter 1 validation, unique ids, declared refs, reachability of every scene/choice/ending/failure, no dead ends, Persian-only text, timers, checkpoint placement, no functions in data |
+| `tests/chapter1.playthrough.test.ts` | 28 | Chapter 1 branches: three stranger choices, silence reveals nothing, note via its action only, both routes and their convergence, clue-gated options, ending A/B/C gating, checkpoint recovery and rollback |
 
 ---
 
-## Known limitations (Phase 2 scope)
+## Known limitations (Phase 3 scope)
 
-* Only the disposable demo story exists; Chapter 1 content, the full branching graph and its
-  canonical narration are not written.
-* Timed decisions are modelled and validated but **not executed** (no timers, no countdown UI).
+* Chapter 1 is complete as *content*; Chapters 2+ are not written. The three endings each carry a
+  Chapter-2 hook, but no Chapter 2 exists yet.
+* Timed decisions are modelled and validated but **not executed** (no timers, no countdown UI), so
+  the 12 s / 8 s pressure in Chapter 1 is a design contract rather than a played experience.
 * No save/load UI and no browser persistence: `serializeState`/`restoreSnapshot` are ready,
   storage is deliberately absent. Checkpoints live in memory for the current session only.
-* Clues are tracked, but there is no inventory/item system, investigation UI, relationship
-  system or flowchart view yet.
+* Clues are tracked and gated, but there is no clue-inventory screen, investigation UI,
+  relationship system or flowchart view yet.
 * The UI gained only a failure screen and a checkpoint hint; no redesign.
 * No artwork, audio, animations beyond a fade, analytics, or Android/Capacitor project.
 * Error copy is mapped from engine codes in the UI; engine messages themselves are English and
