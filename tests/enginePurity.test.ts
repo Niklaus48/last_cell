@@ -43,6 +43,8 @@ describe('story engine purity', () => {
         'types.ts',
         'conditions.ts',
         'effects.ts',
+        'history.ts',
+        'snapshot.ts',
         'validation.ts',
         'index.ts',
       ]),

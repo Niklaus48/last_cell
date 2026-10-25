@@ -5,9 +5,11 @@
  * metadata (asset URLs, etc.) is resolved here, outside React, so components
  * stay dumb. This is not React state: it is a plain derived data structure.
  */
+import { deriveVisitedSceneIds } from '../engine';
 import type {
   ChoiceDefinition,
   EndingDefinition,
+  FailureDefinition,
   HistoryEntry,
   SceneDefinition,
   StoryState,
@@ -70,5 +72,24 @@ export function toEndingViewModel(
   ending: EndingDefinition,
   state: StoryState,
 ): EndingViewModel {
-  return { ending, visitedCount: state.visitedSceneIds.length };
+  // visited scenes are derived from history, never stored twice
+  return { ending, visitedCount: deriveVisitedSceneIds(state.history).length };
+}
+
+export interface FailureViewModel {
+  readonly failure: FailureDefinition;
+  readonly visitedCount: number;
+  /** True when the failure declares a checkpoint the player could return to. */
+  readonly recoverable: boolean;
+}
+
+export function toFailureViewModel(
+  failure: FailureDefinition,
+  state: StoryState,
+): FailureViewModel {
+  return {
+    failure,
+    visitedCount: deriveVisitedSceneIds(state.history).length,
+    recoverable: failure.kind === 'recoverable' && failure.recovery !== undefined,
+  };
 }

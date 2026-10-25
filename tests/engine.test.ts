@@ -34,10 +34,13 @@ describe('initialisation', () => {
   });
 
   it('seeds the initial history with the initial scene and no choice', () => {
-    const state = createFixtureEngine().start();
+    const engine = createFixtureEngine();
+    const state = engine.start();
 
     expect(state.history).toEqual([{ sceneId: TEST_SCENE_IDS.start, choiceId: null }]);
-    expect(state.visitedSceneIds).toEqual([TEST_SCENE_IDS.start]);
+    // Visited scenes are derived from history, never stored separately.
+    expect(engine.getVisitedSceneIds(state)).toEqual([TEST_SCENE_IDS.start]);
+    expect('visitedSceneIds' in state).toBe(false);
   });
 });
 
@@ -83,7 +86,14 @@ describe('transitions', () => {
       { sceneId: TEST_SCENE_IDS.start, choiceId: 'go-fork' },
       { sceneId: TEST_SCENE_IDS.fork, choiceId: null },
     ]);
-    expect(first.state.visitedSceneIds).toEqual([TEST_SCENE_IDS.start, TEST_SCENE_IDS.fork]);
+    expect(engine.getVisitedSceneIds(first.state)).toEqual([
+      TEST_SCENE_IDS.start,
+      TEST_SCENE_IDS.fork,
+    ]);
+    expect(engine.getTakenChoiceIds(first.state)).toEqual(['go-fork']);
+    expect(engine.getSceneTransitions(first.state)).toEqual([
+      { fromSceneId: TEST_SCENE_IDS.start, choiceId: 'go-fork', toSceneId: TEST_SCENE_IDS.fork },
+    ]);
   });
 
   it('accepts a scene-scoped selection object', () => {
@@ -144,9 +154,10 @@ describe('invalid input handling', () => {
     if (!atForkNoCourage.ok) return;
 
     const ids = engine.getAvailableChoices(atForkNoCourage.state).map((choice) => choice.id);
-    // courage is 2 → brave-path available; secret-path needs a prior visit.
-    expect(ids).toEqual(['brave-path', 'coward-path']);
-    expect(engine.getChoices(atForkNoCourage.state)).toHaveLength(3);
+    // courage is 2 → brave-path available; secret-path needs a prior visit and
+    // note-path needs a discovered clue.
+    expect(ids).toEqual(['brave-path', 'coward-path', 'trigger-trap']);
+    expect(engine.getChoices(atForkNoCourage.state)).toHaveLength(5);
     expect(engine.isChoiceAvailable(atForkNoCourage.state, 'secret-path')).toBe(false);
   });
 
@@ -222,13 +233,79 @@ describe('restore', () => {
     const engine = createFixtureEngine();
     const state = engine.start();
 
-    expect(engine.restore(state)).toBe(state);
+    // restore() now returns an independent clone (never the caller's object).
+    expect(engine.restore(state)).toEqual(state);
+    expect(engine.restore(state)).not.toBe(state);
 
     expect(() => engine.restore({ ...state, storyId: 'another-story' })).toThrow(
       /Cannot restore/,
     );
     expect(() => engine.restore({ ...state, currentSceneId: 'missing-scene' })).toThrow(
-      /unknown scene/,
+      /is not a scene in this story/,
     );
+  });
+});
+
+describe('effect failure atomicity', () => {
+  it('rejects a choice whose effects cannot all be applied, leaving state untouched', () => {
+    const engine = createFixtureEngine();
+    const state = engine.start();
+    const result = engine.choose(state, 'corrupt-and-bump');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe('EFFECT_FAILED');
+    expect(result.error.variable).toBe('courage');
+    // No partial write: the variable was not even set to 'high'.
+    expect(result.state).toBe(state);
+    expect(result.state.variables).toEqual({ courage: 0 });
+    expect(result.state.currentSceneId).toBe(TEST_SCENE_IDS.start);
+    expect(result.state.progress).toEqual({ status: 'playing' });
+  });
+});
+
+describe('repeated scene visits', () => {
+  it('keeps every visit in history while reporting a unique scene path', () => {
+    const engine = createFixtureEngine();
+    const first = engine.choose(engine.start(), 'find-note');
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    const toHidden = engine.choose(first.state, 'note-path');
+    expect(toHidden.ok).toBe(true);
+    if (!toHidden.ok) return;
+    const back = engine.choose(toHidden.state, 'back-to-fork');
+    expect(back.ok).toBe(true);
+    if (!back.ok) return;
+
+    // History keeps the full, ordered trail (including the revisit)…
+    expect(back.state.history).toEqual([
+      { sceneId: TEST_SCENE_IDS.start, choiceId: null },
+      { sceneId: TEST_SCENE_IDS.start, choiceId: 'find-note' },
+      { sceneId: TEST_SCENE_IDS.fork, choiceId: null },
+      { sceneId: TEST_SCENE_IDS.fork, choiceId: 'note-path' },
+      { sceneId: TEST_SCENE_IDS.hidden, choiceId: null },
+      { sceneId: TEST_SCENE_IDS.hidden, choiceId: 'back-to-fork' },
+      { sceneId: TEST_SCENE_IDS.fork, choiceId: null },
+    ]);
+    // …while the derived path lists each scene once, in first-visit order.
+    expect(engine.getVisitedSceneIds(back.state)).toEqual([
+      TEST_SCENE_IDS.start,
+      TEST_SCENE_IDS.fork,
+      TEST_SCENE_IDS.hidden,
+    ]);
+    expect(engine.getTakenChoiceIds(back.state)).toEqual(['find-note', 'note-path', 'back-to-fork']);
+    expect(engine.getSceneTransitions(back.state)).toHaveLength(3);
+  });
+
+  it('reflects the revisit in visitedScene conditions', () => {
+    const engine = createFixtureEngine();
+    const first = engine.choose(engine.start(), 'find-note');
+    if (!first.ok) throw new Error('fixture walk failed');
+    const toHidden = engine.choose(first.state, 'note-path');
+    if (!toHidden.ok) throw new Error('fixture walk failed');
+    const back = engine.choose(toHidden.state, 'back-to-fork');
+    if (!back.ok) throw new Error('fixture walk failed');
+
+    expect(engine.isChoiceAvailable(back.state, 'secret-path')).toBe(true);
   });
 });

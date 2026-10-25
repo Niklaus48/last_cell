@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createStoryEngine, StoryDefinitionError, validateStory } from '../src/story/engine';
 import type { StoryDefinition } from '../src/story/engine';
-import { makeTestStory, TEST_SCENE_IDS } from './fixtures/testStory';
+import {
+  makeTestStory,
+  TEST_CHECKPOINT_IDS,
+  TEST_CLUE_IDS,
+  TEST_FAILURE_IDS,
+  TEST_SCENE_IDS,
+} from './fixtures/testStory';
 
 /**
  * Deep-mutable view of a story definition, used to inject authoring mistakes.
@@ -144,5 +150,182 @@ describe('createStoryEngine', () => {
       expect(definitionError.errors).toHaveLength(1);
       expect(definitionError.message).toContain('missing');
     }
+  });
+});
+
+describe('validateStory — clues, checkpoints, failures', () => {
+  const codes = (story: StoryDefinition): string[] => {
+    const result = validateStory(story);
+    return result.ok ? [] : result.errors.map((error) => error.code);
+  };
+
+  it('rejects an undeclared clue in an effect', () => {
+    expect(
+      codes(storyWith((story) => {
+        const choice = sceneAt(story, 0).choices[0];
+        if (choice === undefined) throw new Error('fixture');
+        choice.effects = [{ kind: 'discoverClue', clueId: 'c-ghost' }];
+      })),
+    ).toContain('UNKNOWN_CLUE');
+  });
+
+  it('rejects an undeclared clue in a condition', () => {
+    expect(
+      codes(storyWith((story) => {
+        const choice = sceneAt(story, 1).choices[0];
+        if (choice === undefined) throw new Error('fixture');
+        choice.condition = { kind: 'clueDiscovered', clueId: 'c-ghost' };
+      })),
+    ).toContain('UNKNOWN_CLUE');
+  });
+
+  it('rejects duplicate clue ids and empty labels', () => {
+    expect(
+      codes(storyWith((story) => {
+        story.clues?.push({ id: TEST_CLUE_IDS.note, label: 'دوباره' });
+      })),
+    ).toContain('DUPLICATE_CLUE_ID');
+  });
+
+  it('allows free-form clue ids when no registry is declared', () => {
+    const story = storyWith((draft) => {
+      delete draft.clues;
+    });
+    expect(validateStory(story).ok).toBe(true);
+  });
+
+  it('rejects a checkpoint pointing at an unknown scene', () => {
+    expect(
+      codes(storyWith((story) => {
+        const checkpoint = story.checkpoints?.[0];
+        if (checkpoint === undefined) throw new Error('fixture');
+        checkpoint.sceneId = 's-ghost';
+      })),
+    ).toContain('UNKNOWN_CHECKPOINT_SCENE');
+  });
+
+  it('rejects duplicate checkpoint ids', () => {
+    expect(
+      codes(storyWith((story) => {
+        story.checkpoints?.push({ id: TEST_CHECKPOINT_IDS.start, sceneId: TEST_SCENE_IDS.fork });
+      })),
+    ).toContain('DUPLICATE_CHECKPOINT_ID');
+  });
+
+  it('rejects a failure that recovers to an undeclared checkpoint', () => {
+    expect(
+      codes(storyWith((story) => {
+        const failure = story.failures?.[0];
+        if (failure === undefined) throw new Error('fixture');
+        failure.recovery = { type: 'checkpoint', checkpointId: 'cp-ghost' };
+      })),
+    ).toContain('UNKNOWN_CHECKPOINT');
+  });
+
+  it('rejects a recoverable failure without a recovery target', () => {
+    expect(
+      codes(storyWith((story) => {
+        const failure = story.failures?.[0];
+        if (failure === undefined) throw new Error('fixture');
+        delete failure.recovery;
+      })),
+    ).toContain('INVALID_RECOVERY');
+  });
+
+  it('rejects a terminal failure that declares a recovery target', () => {
+    expect(
+      codes(storyWith((story) => {
+        const failure = story.failures?.find((entry) => entry.id === TEST_FAILURE_IDS.terminal);
+        if (failure === undefined) throw new Error('fixture');
+        failure.recovery = { type: 'checkpoint', checkpointId: TEST_CHECKPOINT_IDS.fork };
+      })),
+    ).toContain('INVALID_RECOVERY');
+  });
+
+  it('rejects a choice that leads to an undeclared failure', () => {
+    expect(
+      codes(storyWith((story) => {
+        const choice = sceneAt(story, 0).choices[0];
+        if (choice === undefined) throw new Error('fixture');
+        choice.outcome = { type: 'failure', failureId: 'f-ghost' };
+      })),
+    ).toContain('UNKNOWN_FAILURE');
+  });
+
+  it('rejects an increment on a variable declared as non-numeric', () => {
+    const result = validateStory(storyWith((story) => {
+      story.initialVariables = { ...story.initialVariables, tone: 'calm' };
+      const choice = sceneAt(story, 0).choices[0];
+      if (choice === undefined) throw new Error('fixture');
+      choice.effects = [{ kind: 'incrementVariable', variable: 'tone', amount: 1 }];
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    const invalidIncrement = result.errors.find((error) => error.code === 'INVALID_INCREMENT');
+    expect(invalidIncrement?.message).toContain('tone');
+  });
+
+  it('rejects a non-finite increment amount', () => {
+    expect(
+      codes(storyWith((story) => {
+        const choice = sceneAt(story, 0).choices[0];
+        if (choice === undefined) throw new Error('fixture');
+        choice.effects = [
+          { kind: 'incrementVariable', variable: 'courage', amount: Number.NaN },
+        ];
+      })),
+    ).toContain('INVALID_INCREMENT');
+  });
+
+  it('rejects an ordered comparison against a non-numeric value', () => {
+    const result = validateStory(storyWith((story) => {
+      const choice = sceneAt(story, 1).choices[0];
+      if (choice === undefined) throw new Error('fixture');
+      choice.condition = {
+        kind: 'compareVariable',
+        variable: 'courage',
+        operator: 'gte',
+        value: 'many',
+      };
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map((error) => error.code)).toContain('INVALID_CONDITION');
+  });
+
+  it('rejects empty all/any combinators and dangling visitedScene references', () => {
+    const result = validateStory(storyWith((story) => {
+      const first = sceneAt(story, 1).choices[0];
+      const second = sceneAt(story, 1).choices[1];
+      if (first === undefined || second === undefined) throw new Error('fixture');
+      first.condition = { kind: 'all', conditions: [] };
+      second.condition = { kind: 'visitedScene', sceneId: 's-ghost' };
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.filter((error) => error.code === 'INVALID_CONDITION')).toHaveLength(2);
+  });
+
+  it('rejects a story with no endings array instead of throwing', () => {
+    const result = validateStory(storyWith((story) => {
+      delete (story as { endings?: unknown }).endings;
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map((error) => error.code)).toContain('EMPTY_FIELD');
+  });
+
+  it('rejects a scene whose choices are missing instead of throwing', () => {
+    const result = validateStory(storyWith((story) => {
+      delete (sceneAt(story, 0) as { choices?: unknown }).choices;
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map((error) => error.code)).toContain('SCENE_WITHOUT_CHOICES');
   });
 });

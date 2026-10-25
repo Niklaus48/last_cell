@@ -53,3 +53,48 @@ describe('<App />', () => {
     expect(screen.queryByRole('button', { name: /وکیل می‌خواهم/ })).toBeNull();
   });
 });
+
+describe('<App /> failure and recovery', () => {
+  it('shows the checkpoint hint and recovers to it after a failure', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /آغاز نمونهٔ توسعه/ }));
+    await user.click(screen.getByRole('button', { name: /سکوت می‌کنم/ }));
+
+    // The corridor scene declares a checkpoint, so the UI reports it.
+    expect(screen.getByText(/نقطهٔ امن: راهروی بند/)).not.toBeNull();
+
+    await user.click(screen.getByRole('button', { name: /به تای پوشه نگاه می‌کنم/ }));
+    expect(screen.getByRole('heading', { name: 'روی صندلی' })).not.toBeNull();
+
+    await user.click(screen.getByRole('button', { name: /روی نگهبان فشار می‌آورم/ }));
+
+    // Engine-reported failure, rendered from getFailure/getRecoveryTarget.
+    expect(screen.getByRole('heading', { name: /نگهبان خبر می‌شود/ })).not.toBeNull();
+    expect(screen.getByText('شکست قابل جبران')).not.toBeNull();
+
+    const recover = screen.getByRole('button', { name: /بازگشت به آخرین نقطهٔ امن/ });
+    expect((recover as HTMLButtonElement).disabled).toBe(false);
+    await user.click(recover);
+
+    // Back in the corridor scene: the clue found after the checkpoint is gone,
+    // so the clue-gated choice is no longer offered.
+    expect(screen.getByRole('heading', { name: 'سکوت، اولین پاسخ' })).not.toBeNull();
+    expect(screen.queryByRole('button', { name: /برگهٔ جدا‌شده/ })).toBeNull();
+  });
+
+  it('explains that no safe point exists when the player never reached one', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /آغاز نمونهٔ توسعه/ }));
+    await user.click(screen.getByRole('button', { name: /حرف می‌زنم/ }));
+    await user.click(screen.getByRole('button', { name: /روی نگهبان فشار می‌آورم/ }));
+
+    expect(screen.getByRole('heading', { name: /نگهبان خبر می‌شود/ })).not.toBeNull();
+    const recover = screen.getByRole('button', { name: /بازگشت به آخرین نقطهٔ امن/ });
+    expect((recover as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/نقطهٔ امنی برای بازگشت ثبت نشده است/)).not.toBeNull();
+  });
+});

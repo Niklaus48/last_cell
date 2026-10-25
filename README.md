@@ -4,9 +4,15 @@ A Persian-language, choice-driven narrative game. The player follows **Kian Fara
 experienced Iranian operative held in a fictional high-security prison; the game leans on
 psychological suspense, investigation, hidden information and branching outcomes.
 
-This repository currently contains **Phase 1 — the project foundation and story-engine
-architecture only**. The canonical Chapter 1 story, timed decisions, clue systems, save games,
-artwork, audio and Android packaging are *not* implemented yet.
+This repository currently contains **Phases 1–2: the project foundation and a hardened,
+React-independent story engine**. The canonical Chapter 1 story, timed-decision execution,
+save/load UI, artwork, audio and Android packaging are *not* implemented yet.
+
+* Phase 1 — React + Vite foundation, first engine, demo story, tests.
+* Phase 2 — declarative conditions/effects hardening, structured clue tracking, checkpoints,
+  recoverable failures, versioned snapshots, extended validation.
+
+Engine internals are documented in **[docs/engine-architecture.md](docs/engine-architecture.md)**.
 
 ---
 
@@ -48,7 +54,7 @@ Quality gates:
 ```bash
 npm run typecheck  # tsc -b, strict mode, zero errors expected
 npm run lint       # eslint .
-npm run test       # vitest run (51 tests)
+npm run test       # vitest run (154 tests)
 npm run verify     # typecheck + lint + test + build in one go
 ```
 
@@ -95,18 +101,24 @@ git remote add origin git@github.com:<owner>/<repo>.git   # or https://…
 3. Press **آغاز نمونهٔ توسعه** and choose.
 
 The demo story (`src/story/content/demoStory.ts`, «اتاق بازجویی») is a **development-only
-fixture**, not Chapter 1. It has 3 scenes, 3 endings, one state variable (`suspicion`) and one
-conditionally available choice:
+fixture**, not Chapter 1. It has 3 scenes, 3 endings, 3 variables, one clue, one declared
+checkpoint and one recoverable failure:
 
 ```
 demo-arrival (سلول ۱۴)
 ├── «حرف می‌زنم»      → demo-interrogation   (suspicion +1)
-│   ├── «دروغ می‌گویم»  → ending: روایت شکسته
-│   ├── «بخشی از حقیقت» → ending: حقیقت کوچک
-│   └── «وکیل می‌خواهم» → ending: روایت شکسته   ← only if suspicion ≥ 1
-└── «سکوت می‌کنم»     → demo-silence
-    └── «همچنان سکوت»  → ending: سکوت
+│   ├── «دروغ می‌گویم»      → ending: روایت شکسته
+│   ├── «بخشی از حقیقت»     → ending: حقیقت کوچک
+│   ├── «دربارهٔ برگه…»      → ending: حقیقت کوچک   ← only if clue folded-note discovered
+│   ├── «وکیل می‌خواهم»     → ending: روایت شکسته   ← only if suspicion ≥ 1
+│   └── «روی نگهبان فشار…»  → failure: f-guard-alert (recoverable)
+└── «سکوت می‌کنم»     → demo-silence   ← declared checkpoint «راهروی بند»
+    ├── «همچنان سکوت»      → ending: سکوت
+    └── «به تای پوشه نگاه…» → demo-interrogation  (+ clue folded-note)
 ```
+
+The failure returns the player to the corridor checkpoint (a snapshot: clues and variables
+from after the checkpoint are rolled back), which exercises recovery end to end in the UI.
 
 ---
 
@@ -119,7 +131,7 @@ src/
     useStorySession.ts   # the only place React touches the engine
   ui/
     components/          # ChoiceList, NarrationBlock  (presentational)
-    screens/             # TitleScreen, GameScreen, EndingScreen
+    screens/             # TitleScreen, GameScreen, EndingScreen, FailureScreen
     messages.ts          # engine error code → Persian copy
     format.ts            # Persian digits
   story/
@@ -141,12 +153,18 @@ src/
     index.css            # reset, buttons, choice list, motion
   main.tsx
 tests/
-  fixtures/testStory.ts  # engine fixture, independent of production content
-  engine.test.ts         # initialisation, transitions, invalid input, endings, history
-  validation.test.ts     # malformed story definitions
-  demoStory.test.ts      # the demo story, driven through the engine only
+  fixtures/testStory.ts  # engine fixture (clues, checkpoints, failures), no production data
+  engine.test.ts         # init, transitions, atomicity, history, repeated visits, endings
+  conditions.test.ts     # primitive comparisons, missing vars, nesting, clues
+  effects.test.ts        # set/increment/unset/discover, invalid increments, immutability
+  clues.test.ts          # discovery, de-duplication, gating, non-leakage
+  checkpoints.test.ts    # checkpoint create/restore, recoverable vs terminal failures
+  snapshots.test.ts      # JSON round-trip, untrusted-input validation, independence
+  validation.test.ts     # malformed stories: scenes, choices, clues, checkpoints, failures
+  demoStory.test.ts      # the demo story end to end, engine only
+  content.test.ts        # story content is declarative data (no functions)
   enginePurity.test.ts   # architectural guard (see below)
-  app.test.tsx           # RTL smoke test of the real App
+  app.test.tsx           # RTL: playthrough, ending, failure + recovery
 public/favicon.svg
 index.html               # <html lang="fa" dir="rtl">
 ```
@@ -177,50 +195,52 @@ content (declarative data)  →  engine (pure state transitions)  →  sceneView
 React never decides *what* is a legal choice or *where* it leads. `useStorySession` only stores
 the `StoryState` snapshot the engine returns and renders from it.
 
-### Engine API
+### Engine API (summary)
 
 ```ts
 import { createStoryEngine } from './story/engine';
 
-const engine = createStoryEngine(story);      // throws StoryDefinitionError if invalid
-const state  = engine.start();                // StoryState at story.initialSceneId
+const engine = createStoryEngine(story);        // throws StoryDefinitionError if invalid
+const state  = engine.start();
 
-engine.getCurrentScene(state);                // SceneDefinition
-engine.getChoices(state);                     // all declared choices
-engine.getAvailableChoices(state);            // choices whose condition passes
-engine.isChoiceAvailable(state, 'go-fork');   // boolean
-engine.getEnding(state);                      // EndingDefinition | null
+engine.getAvailableChoices(state);              // engine decides availability
+engine.getCheckpointOpportunity(state);         // declared checkpoint for this scene, or null
+engine.hasClue(state, 'folded-note');           // boolean only, no description leak
+engine.getSceneTransitions(state);              // [{ fromSceneId, choiceId, toSceneId }]
 
-const result = engine.choose(state, { sceneId: state.currentSceneId, choiceId: 'go-fork' });
-// or the shorthand: engine.choose(state, 'go-fork')
-
+const result = engine.choose(state, { sceneId: state.currentSceneId, choiceId: 'speak' });
 if (result.ok) {
-  result.state;        // new StoryState — the input is never mutated
-  result.choice;       // ChoiceDefinition that was taken
-  result.transition;   // { type: 'scene', toSceneId } | { type: 'ending', endingId }
+  result.state;       // new StoryState; input never mutated
+  result.transition;  // {type:'scene'} | {type:'ending'} | {type:'failure'}
+  result.changes;     // { variableChanges: [{variable, before, after}], discoveredClueIds }
 } else {
-  result.error.code;   // 'INVALID_CHOICE' | 'CHOICE_UNAVAILABLE' | 'STALE_SCENE'
-                       // | 'GAME_ENDED' | 'UNKNOWN_SCENE'
-  result.state;        // === the unchanged input state
+  result.error.code;  // typed code (see docs); result.state === input state
 }
+
+const checkpoint = engine.createCheckpoint(result.state);   // only where declared
+const recovered  = engine.recover(failedState, checkpoint.checkpoint);
 ```
 
 Design decisions worth knowing:
 
-* **Declarative content only.** Conditions (`always`, `compareVariable`, `visitedScene`,
-  `not`, `all`, `any`) and effects (`setVariable`, `incrementVariable`, `unsetVariable`) are
-  typed data, never functions — so they can be validated, serialised and tested.
-* **Immutable transitions.** Every successful `choose` returns fresh objects; failures return
-  the *same* state instance, so a rejected click cannot corrupt a run.
-* **Discriminated unions** are used where they remove invalid states: a choice leads to a scene
-  *or* an ending (never both), a run is `playing` *or* `ended`, and results are `ok | !ok`.
-* **`StoryState` is a plain serialisable snapshot** (`storyId`, `currentSceneId`, `progress`,
-  `variables`, `history`, `visitedSceneIds`). There is no persistence in this phase; the hook
-  keeps it in memory. A later phase can write `JSON.stringify(state)` from outside the engine
-  (or use `engine.restore(state)` to re-validate a loaded save) without touching domain code.
+* **Declarative content only** — conditions, effects, clues, checkpoints and failure rules
+  are typed data, never functions, so they can be validated, serialised and tested.
+* **Atomic transitions** — effects are computed on a copy; if any is impossible the whole
+  choice fails with `EFFECT_FAILED` and nothing is written (no partial state, no history entry).
+* **Immutable transitions** — successful choices return fresh objects; failures return the
+  *same* state instance, so a rejected click cannot corrupt a run.
+* **Discriminated unions** remove invalid states: a choice leads to a scene *or* an ending
+  *or* a failure; a run is `playing` | `ended` | `failed`; results are `ok | !ok`.
+* **`StoryState` is a versioned, JSON-safe snapshot** (`schemaVersion`, `storyId`,
+  `currentSceneId`, `progress`, `variables`, `discoveredClueIds`, `history`). Visited scenes
+  and taken choices are *derived* from `history`, never stored twice. No browser persistence
+  in this phase — `serializeState` / `restoreSnapshot` exist for when it arrives.
+* **Checkpoints & failures** — content declares which scenes are safe recovery points
+  (`checkpoints`) and how a failure recovers (`failures[].recovery`, checkpoint only).
+  Recovery restores a real snapshot, so clues/variables before the checkpoint survive and
+  post-checkpoint changes roll back. Nothing recovers automatically.
 * **Timed decisions** exist in the type model (`SceneDefinition.timedDecision`) and are
-  validated for structural correctness, but they are **not evaluated** yet — no timers exist in
-  the engine or UI.
+  validated for structural correctness, but they are **not executed** yet.
 * **Assets** are referenced by stable ids (`backgroundAssetId`); the UI resolves them to local
   CSS gradients in `src/story/state/sceneView.ts`. No remote URLs, so the app works offline.
 
@@ -240,32 +260,43 @@ Design decisions worth knowing:
 
 ## Tests
 
-`npm run test` currently runs **51 tests in 5 files**:
+`npm run test` currently runs **154 tests in 11 files**:
 
-| File | Covers |
-| --- | --- |
-| `tests/engine.test.ts` (18) | new game init, initial scene, valid transition + destination, effects, history/visited scenes, invalid choice id, stale scene, unsatisfied condition, ended-run rejection, ending recognition, `restore` |
-| `tests/validation.test.ts` (10) | missing initial scene, duplicate scene ids, dangling scene/ending references, duplicate choice ids, dead-end scene, malformed timed decision, `StoryDefinitionError` payload |
-| `tests/demoStory.test.ts` (7) | demo story validity, both branches, all three endings, conditional choice gating, invalid choice safety |
-| `tests/enginePurity.test.ts` (13) | engine stays React/DOM/storage-free; `any` never appears in the engine |
-| `tests/app.test.tsx` (3) | RTL/jsdom: title screen → start → transition → ending → restart |
+| File | Tests | Covers |
+| --- | --- | --- |
+| `tests/engine.test.ts` | 21 | init, transitions + destinations, atomic effect failure, history/visited scenes, invalid choice id, stale scene, unavailable condition, ended/failed rejection, ending recognition, repeated visits, `restore` |
+| `tests/conditions.test.ts` | 17 | primitive comparisons, non-coercion, missing variables, nesting, clue/visited conditions, determinism, frozen inputs |
+| `tests/effects.test.ts` | 15 | set/increment/unset/discover, ordering, missing = 0, invalid increments, atomicity, immutability |
+| `tests/clues.test.ts` | 7 | discovery, record exposure, re-discovery, gating, no description leakage |
+| `tests/checkpoints.test.ts` | 22 | opportunities, creation, snapshot isolation, restore, recoverable vs terminal failures, recovery semantics, invalid checkpoints |
+| `tests/snapshots.test.ts` | 11 | JSON round-trip, JSON-safety walk, invalid-snapshot diagnostics, independence, strict `restore` |
+| `tests/validation.test.ts` | 26 | scene/choice/ending/failure/checkpoint/clue/condition/effect errors, malformed arrays |
+| `tests/demoStory.test.ts` | 10 | demo validity, branches, endings, clue gating, checkpoint + failure recovery |
+| `tests/content.test.ts` | 7 | story content is declarative JSON data (no functions/classes) |
+| `tests/enginePurity.test.ts` | 13 | engine stays React/DOM/storage-free; `any` never appears; imports stay in-layer |
+| `tests/app.test.tsx` | 5 | RTL/jsdom: playthrough, ending, failure screen, recovery, restart |
 
 ---
 
-## Known limitations (Phase 1 scope)
+## Known limitations (Phase 2 scope)
 
 * Only the disposable demo story exists; Chapter 1 content, the full branching graph and its
   canonical narration are not written.
-* Timed decisions are modelled and validated but not executed.
-* No clue tracking beyond free-form variables; no relationship system, checkpoints, or
-  save/load UI (the state shape is ready, the persistence layer is not implemented).
+* Timed decisions are modelled and validated but **not executed** (no timers, no countdown UI).
+* No save/load UI and no browser persistence: `serializeState`/`restoreSnapshot` are ready,
+  storage is deliberately absent. Checkpoints live in memory for the current session only.
+* Clues are tracked, but there is no inventory/item system, investigation UI, relationship
+  system or flowchart view yet.
+* The UI gained only a failure screen and a checkpoint hint; no redesign.
 * No artwork, audio, animations beyond a fade, analytics, or Android/Capacitor project.
 * Error copy is mapped from engine codes in the UI; engine messages themselves are English and
   developer-facing.
 
 ## Roadmap hooks already in place
 
-`StoryDefinition.scenes[]` + `endings[]` + `initialVariables` for content growth; `visitedSceneIds`
-and `history` for path analysis and the future chapter flowchart; `ChoiceCondition`/`StateEffect`
-for clue and relationship gating; the serialisable `StoryState` for save/load and checkpoint
-recovery; `SceneDefinition.timedDecision` for the timed-decision phase.
+`StoryDefinition.scenes[]` + `endings[]` + `initialVariables` for content growth;
+`clues[]`/`checkpoints[]`/`failures[]` registries for validated references;
+`history` (and the derived `getVisitedSceneIds` / `getTakenChoiceIds` / `getSceneTransitions`)
+for path analysis and the future chapter flowchart; `ChoiceCondition`/`StateEffect` for clue and
+relationship gating; versioned `StoryState` + `serializeState`/`restoreSnapshot` for save/load;
+`SceneDefinition.timedDecision` for the timed-decision phase.

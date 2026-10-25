@@ -229,3 +229,9 @@
     display: none;
   }
 }
+
+/* Checkpoint hint in the scene top bar (Phase 2 engine integration). */
+.game-topbar__checkpoint {
+  color: var(--color-accent);
+  letter-spacing: normal;
+}

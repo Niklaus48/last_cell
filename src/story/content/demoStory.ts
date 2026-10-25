@@ -3,14 +3,15 @@
  *
  * This is a disposable architectural example proving the engine works. It is
  * NOT canonical Chapter 1 material and will be replaced in a later phase.
+ * The scenario is deliberately generic: the real escape/failure content is
+ * written in a later phase.
  *
- * Shape (4 scenes, 2 endings, one conditional choice, one flag effect):
- *
- *   demo-arrival ──(پاسخ دادن)──────────────▶ demo-interrogation
- *        │                                          │
- *        └──(سکوت)──▶ demo-silence ──▶ ending: closure
- *                                          ├──(دروغ)──▶ ending: broken-story
- *                                          └──(حقیقت)─▶ ending: small-truth
+ * What it demonstrates:
+ *  - branching scenes and three endings
+ *  - state variables and a declarative availability condition (`suspicion >= 1`)
+ *  - a clue registry + a clue-gated choice (`clueDiscovered: folded-note`)
+ *  - a declared checkpoint (`cp-corridor`) offered by one scene
+ *  - a recoverable failure (`f-guard-alert`) that returns to that checkpoint
  */
 import type { StoryDefinition } from '../engine';
 
@@ -26,11 +27,51 @@ export const DEMO_ENDING_IDS = {
   smallTruth: 'demo-ending-small-truth',
 } as const;
 
+export const DEMO_CLUE_IDS = {
+  foldedNote: 'folded-note',
+} as const;
+
+export const DEMO_CHECKPOINT_IDS = {
+  corridor: 'cp-corridor',
+} as const;
+
+export const DEMO_FAILURE_IDS = {
+  guardAlert: 'f-guard-alert',
+} as const;
+
 export const demoStory: StoryDefinition = {
   id: 'demo-interrogation-room',
   title: 'اتاق بازجویی — نمونهٔ توسعه',
   initialSceneId: DEMO_SCENE_IDS.arrival,
   initialVariables: { suspicion: 0 },
+
+  clues: [
+    {
+      id: DEMO_CLUE_IDS.foldedNote,
+      label: 'یادداشت تاشده',
+      detail: 'گوشهٔ پوشه تاشده است؛ یک برگ از آن جدا شده و برگشته.',
+    },
+  ],
+
+  checkpoints: [
+    {
+      id: DEMO_CHECKPOINT_IDS.corridor,
+      sceneId: DEMO_SCENE_IDS.silence,
+      label: 'راهروی بند',
+    },
+  ],
+
+  failures: [
+    {
+      id: DEMO_FAILURE_IDS.guardAlert,
+      title: 'نمونهٔ شکست: نگهبان خبر می‌شود',
+      summary:
+        'فشار آوردن روی نگهبان جواب نداد؛ او سالن را ترک کرد و حالا صدای قدم‌های بیشتری از راهرو می‌آید.',
+      kind: 'recoverable',
+      recovery: { type: 'checkpoint', checkpointId: DEMO_CHECKPOINT_IDS.corridor },
+    },
+  ],
+
   scenes: [
     {
       id: DEMO_SCENE_IDS.arrival,
@@ -61,8 +102,8 @@ export const demoStory: StoryDefinition = {
       backgroundAssetId: 'corridor',
       narration: [
         'مردی با پوشهٔ نازکی وارد می‌شود. چیزی نمی‌پرسد. پوشه را روی میز می‌گذارد و منتظر می‌ماند.',
+        'گوشهٔ پوشه تاشده است؛ یک برگ از آن جدا شده و برگشته.',
         'ده دقیقه می‌گذرد. در این ساختمان، سکوت ارزان نیست؛ هر ثانیه‌اش با چیزی خریده می‌شود.',
-        'وقتی بالاخره دهان باز می‌کند، می‌فهمی که انتظار کشیده تا تو اول حرف بزنی.',
       ],
       choices: [
         {
@@ -70,6 +111,12 @@ export const demoStory: StoryDefinition = {
           label: 'همچنان سکوت می‌کنم.',
           outcome: { type: 'ending', endingId: DEMO_ENDING_IDS.closure },
           effects: [{ kind: 'setVariable', variable: 'suspicion', value: 0 }],
+        },
+        {
+          id: 'read-file',
+          label: 'به تای پوشه نگاه می‌کنم.',
+          outcome: { type: 'transition', targetSceneId: DEMO_SCENE_IDS.interrogation },
+          effects: [{ kind: 'discoverClue', clueId: DEMO_CLUE_IDS.foldedNote }],
         },
       ],
     },
@@ -95,10 +142,17 @@ export const demoStory: StoryDefinition = {
           effects: [{ kind: 'setVariable', variable: 'toldTruth', value: true }],
         },
         {
+          id: 'ask-note',
+          label: 'دربارهٔ برگهٔ جدا‌شده می‌پرسم.',
+          // Demonstrates a clue-gated choice: only offered once the folded note
+          // has actually been discovered.
+          condition: { kind: 'clueDiscovered', clueId: DEMO_CLUE_IDS.foldedNote },
+          outcome: { type: 'ending', endingId: DEMO_ENDING_IDS.smallTruth },
+        },
+        {
           id: 'demand-lawyer',
           label: 'وکیل می‌خواهم.',
-          // Demonstrates a declarative, state-driven condition: this option only
-          // appears once the player has already raised suspicion.
+          // Demonstrates a declarative, state-driven condition.
           condition: {
             kind: 'compareVariable',
             variable: 'suspicion',
@@ -107,9 +161,17 @@ export const demoStory: StoryDefinition = {
           },
           outcome: { type: 'ending', endingId: DEMO_ENDING_IDS.brokenStory },
         },
+        {
+          id: 'press-guard',
+          label: 'روی نگهبان فشار می‌آورم.',
+          // Demonstrates a recoverable failure: the engine reports it as a
+          // typed outcome, and recovery returns to the declared checkpoint.
+          outcome: { type: 'failure', failureId: DEMO_FAILURE_IDS.guardAlert },
+        },
       ],
     },
   ],
+
   endings: [
     {
       id: DEMO_ENDING_IDS.closure,
