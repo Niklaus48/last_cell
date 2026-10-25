@@ -9,6 +9,7 @@ import {
 import type { Checkpoint, StoryEngine, StoryEngineError, StoryState } from '../story/engine';
 import type { ActiveTimedDecision } from './useTimedDecision';
 import type { SaveAvailability, SaveStorage } from '../persistence';
+import { getScenePresentation } from '../presentation';
 import type { SaveFeedback } from './useStorySession';
 import { SAVE_INVALID_HINT, SAVE_NONE_MESSAGE, SAVE_STORAGE_DISABLED_HINT } from '../ui/messages';
 import { TitleScreen } from '../ui/screens/TitleScreen';
@@ -147,10 +148,13 @@ function PlaySession({
   const choices = engine.getAvailableChoices(state);
   const view = toSceneViewModel(scene, choices, state.history);
   const checkpoint = engine.getCheckpointOpportunity(state);
+  // Pure lookup: story data + presentation metadata in, visuals out.
+  const presentation = getScenePresentation(scene);
 
   return (
     <GameScreen
       view={view}
+      presentation={presentation}
       transitionCount={transitionCount}
       lastError={lastError}
       checkpointLabel={checkpoint?.label ?? null}

@@ -445,6 +445,44 @@ callbacks, which is what makes these cases deterministic:
 
 ---
 
+## Presentation layer (Phase 5)
+
+Visuals are a *sibling* of the story layers, never part of them:
+
+```
+src/story/content/**        ── scene id + backgroundAssetId (unchanged game data)
+        │  (read-only)
+        ▼
+src/presentation/**         ── types, location defaults, scene overrides,
+                               asset manifest, gradients, preset→class maps
+        │  (pure functions)
+        ▼
+src/ui/scene/SceneBackdrop  ── preload + paint; aria-hidden; pointer-events: none
+        │
+        ▼
+GameScreen                  ── narration, choices, countdown, save controls
+```
+
+`src/presentation/` imports only types from the story layer (`SceneId`) and the
+canonical scene-id constants; `src/story/**` imports nothing from it. There is no
+engine call, no state mutation and no timer in the presentation path, and
+`tests/cinematic.integration.test.tsx` proves that motion and fades leave engine
+state untouched.
+
+Resolution is layered so that new scenes need no presentation entry at all:
+`DEFAULT_PRESENTATION` → location defaults (keyed by `backgroundAssetId`) →
+optional `SCENE_PRESENTATION_OVERRIDES` entry. `validateScenePresentation` checks
+that every override names a real scene, uses known preset ids, has a focal point
+inside `0–100` and points at an asset id that exists in the manifest.
+
+The renderer paints the fallback gradient first and only adds the artwork layer
+once the file has actually loaded (`useSceneImage`), which is why a missing or
+broken image degrades to "gradient" instead of a blank frame. Load results are
+tagged with the URL they belong to, so a slow request from a scene the player has
+already left cannot repaint the current scene.
+
+---
+
 ## Implemented vs deferred
 
 **Implemented (Phase 2):** typed atomic transitions with change summaries, declarative
@@ -463,8 +501,13 @@ silence, 8 s → freeze-and-observe) with single-fire expiry, stale-timer protec
 catch-up and a restrained accessible countdown; local save/resume on the existing snapshot format
 with full validation, typed failures and checkpoint replay; 69 new tests.
 
-**Deferred (Phase 4 non-goals):** multiple save slots, save export/import, cloud sync, encryption,
-pausing a countdown while a tab is hidden.
+**Implemented (Phase 5):** a cinematic presentation layer — declarative per-scene metadata, an
+asset manifest as the single id→file mapping, focal-point crop, camera presets, fades, overlays,
+total fallbacks, reduced-motion handling and 45 tests. Final artwork is deliberately absent.
+
+**Deferred (Phase 4–5 non-goals):** multiple save slots, save export/import, cloud sync,
+encryption, pausing a countdown while a tab is hidden, per-breakpoint art variants, parallax,
+audio, and the illustrations themselves.
 
 **Deferred:** Chapters 2+, flowchart UI, save/load UI and any browser
 persistence, inventory/items, artwork, audio, Capacitor/Android packaging, backend

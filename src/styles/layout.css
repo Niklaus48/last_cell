@@ -98,6 +98,10 @@
 .screen--game {
   gap: var(--space-4);
   background-color: var(--color-backdrop);
+  /* Anchors the cinematic backdrop layer; clips its camera movement. */
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .game-topbar {

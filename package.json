@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
+    "assets:check": "vitest run tests/presentation.assets.test.ts",
     "lint": "eslint .",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
     "feature:new": "bash scripts/new-feature.sh",

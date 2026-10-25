@@ -384,3 +384,207 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------- Cinematic scene backdrop (Phase 5) ---------- */
+/*
+ * One absolutely-positioned layer stack behind the UI. It paints the scene's
+ * fallback gradient, fades in real artwork when supplied, applies a slow camera
+ * move to the artwork only, and adds atmosphere. Nothing here is interactive:
+ * the whole stack is `aria-hidden` and `pointer-events: none`, so choices keep
+ * their exact hit areas whether or not an image exists.
+ */
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background-color: var(--color-backdrop);
+  /* Own stacking context so overlays can never rise above the UI. */
+  isolation: isolate;
+}
+
+/* Scenes declare no size: the layer is always the full scene viewport. */
+.screen--game > .scene-backdrop {
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+.scene-camera {
+  position: absolute;
+  inset: 0;
+  /* Slight over-scale gives the camera room to move without exposing edges. */
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.scene-layer {
+  position: absolute;
+  inset: 0;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  /* Cover-crop: never stretch the artwork, never letterbox it. */
+  background-size: cover;
+  opacity: 1;
+}
+
+.scene-layer--fade {
+  animation: scene-fade-in 420ms ease-out both;
+}
+
+.scene-layer--cut {
+  animation: none;
+}
+
+/* Artwork fades in over the gradient once it has actually loaded. */
+.scene-layer--image {
+  animation: scene-fade-in 300ms ease-out both;
+}
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scene-overlay--vignette {
+  background: radial-gradient(
+    120% 90% at 50% 45%,
+    transparent 30%,
+    rgb(0 0 0 / 28%) 75%,
+    rgb(0 0 0 / 55%) 100%
+  );
+}
+
+.scene-overlay--haze {
+  background:
+    linear-gradient(180deg, rgb(120 150 170 / 10%) 0%, transparent 45%),
+    radial-gradient(80% 60% at 50% 80%, rgb(140 170 190 / 8%), transparent 70%);
+}
+
+.scene-overlay--cold {
+  background:
+    linear-gradient(180deg, rgb(60 90 120 / 14%) 0%, transparent 55%),
+    radial-gradient(100% 80% at 50% 50%, transparent 40%, rgb(4 8 14 / 45%) 100%);
+}
+
+/* Readability: a restrained contrast ramp so narration stays legible even over
+   bright artwork, while the scene itself stays visible. Kept deliberately light
+   in the middle band where the border/frame of the image matters most. */
+.scene-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(7 9 12 / 42%) 0%,
+      rgb(7 9 12 / 14%) 20%,
+      rgb(7 9 12 / 26%) 58%,
+      rgb(7 9 12 / 58%) 86%,
+      rgb(7 9 12 / 70%) 100%
+    );
+}
+
+@keyframes scene-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Camera presets: slow, subtle, artwork-only, compositor-friendly. */
+@keyframes scene-zoom-in {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(0, -0.6%, 0);
+  }
+}
+
+@keyframes scene-zoom-out {
+  from {
+    transform: scale(1.08) translate3d(0, -0.6%, 0);
+  }
+  to {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scene-pan-left {
+  from {
+    transform: scale(1.06) translate3d(1.6%, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(-1.6%, 0, 0);
+  }
+}
+
+@keyframes scene-pan-right {
+  from {
+    transform: scale(1.06) translate3d(-1.6%, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(1.6%, 0, 0);
+  }
+}
+
+.scene-camera--zoom-in {
+  animation: scene-zoom-in 24s ease-in-out both;
+}
+
+.scene-camera--zoom-out {
+  animation: scene-zoom-out 24s ease-in-out both;
+}
+
+.scene-camera--pan-left,
+.scene-camera--pan-right {
+  animation-duration: 30s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: alternate;
+  animation-fill-mode: both;
+}
+
+.scene-camera--pan-left {
+  animation-name: scene-pan-left;
+  animation-iteration-count: 2;
+}
+
+.scene-camera--pan-right {
+  animation-name: scene-pan-right;
+  animation-iteration-count: 2;
+}
+
+/* UI always paints above the backdrop. */
+.screen--game > .game-topbar,
+.screen--game > .game-content,
+.screen--game > .confirm-row,
+.screen--game > .save-notice,
+.screen--game > .error-banner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Reduced motion: no camera movement, no long fades, no information lost. */
+@media (prefers-reduced-motion: reduce) {
+  .scene-camera {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .scene-layer--fade,
+  .scene-layer--image {
+    animation-duration: 1ms !important;
+  }
+}
+
+/* The renderer also reports the preference; belt and braces for environments
+   where the media query is unavailable but the hook fired. */
+.scene-backdrop[data-motion='reduced'] .scene-camera {
+  animation: none !important;
+  transform: none !important;
+}

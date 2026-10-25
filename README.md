@@ -4,10 +4,10 @@ A Persian-language, choice-driven narrative game. The player follows **Kian Fara
 experienced Iranian operative held in a fictional high-security prison; the game leans on
 psychological suspense, investigation, hidden information and branching outcomes.
 
-This repository currently contains **Phases 1–4: the foundation, a hardened React-independent
+This repository currently contains **Phases 1–5: the foundation, a hardened React-independent
 story engine, the complete canonical Chapter 1 narrative** («شش ماه سکوت»), **live timed
-decisions and local saves**. Artwork, audio, cloud saves and Android packaging are *not*
-implemented.
+decisions, local saves and a cinematic presentation layer** ready to receive final artwork.
+Final illustrations, audio, cloud saves and Android packaging are *not* implemented.
 
 * Phase 1 — React + Vite foundation, first engine, demo story, tests.
 * Phase 2 — declarative conditions/effects hardening, structured clue tracking, checkpoints,
@@ -16,6 +16,8 @@ implemented.
   2 recoverable failures, all pure data.
 * Phase 4 — the chapter is playable under pressure: real countdowns that resolve to the
   declared default, and local save/resume built on the existing snapshot format.
+* Phase 5 — cinematic presentation: per-scene artwork, focal points, slow camera moves,
+  fades, atmospheric overlays, and a documented asset contract for the final images.
 
 Chapter 1 narrative design and its consistency review:
 **[docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md)**.
@@ -155,6 +157,28 @@ reads those values from the content; it hard-codes neither the durations nor the
   snapshot; they are rebuilt by replaying the saved history through the public engine API, so a
   saved failure can still be recovered. Storage being unavailable, full or disabled degrades to
   "no saves" without breaking play.
+
+### Cinematic presentation
+
+Every scene is painted by one shared layer (`SceneBackdrop`) driven by declarative
+metadata — no per-scene rendering code:
+
+* **Artwork is optional and replaceable.** `src/presentation/assetManifest.ts` maps an asset id
+  to a file in `public/assets/scenes/chapter-1/`. Every entry is `null` today, so the game shows
+  its fallback gradients; adding a file is a one-line manifest change.
+* **Camera motion** is a small preset set (`slow-zoom-in`, `slow-zoom-out`, `pan-left`,
+  `pan-right`, `none`) applied to the artwork layer only, so text and buttons never drift.
+* **Overlays** (`vignette`, `haze`, `cold`) plus a fixed readability scrim keep Persian
+  narration and choices legible over any image.
+* **Fades** are short and scene-keyed; the previous scene is never left on screen, and nothing
+  waits for an animation before the story advances.
+* **Fallbacks are total**: a pending, unknown, missing or broken image just means "gradient" —
+  never a blank screen, a broken-image icon or a console error storm.
+* **Reduced motion** drops camera movement and turns fades into cuts, in both the hook and CSS.
+
+Nothing in this layer can change choices, timed decisions, clues, checkpoints or endings — it is
+read-only decoration with tests that assert exactly that. Artwork workflow, dimensions, naming and
+focal-point guidance: **[docs/art-assets.md](docs/art-assets.md)**.
 
 ### The dev fixture
 
@@ -319,7 +343,8 @@ Design decisions worth knowing:
 
 ## Tests
 
-`npm run test` currently runs **278 tests in 17 files**:
+`npm run test` currently runs **323 tests in 21 files** (`npm run assets:check` runs the artwork
+manifest check on its own):
 
 | File | Tests | Covers |
 | --- | --- | --- |
@@ -340,13 +365,21 @@ Design decisions worth knowing:
 | `tests/timedDecision.test.tsx` | 25 | 12 s → silence, 8 s → freeze-and-observe, manual-vs-timeout races, stale timers, unmount, background tabs, restart-on-load, no narration replay, live-region restraint, invalid timer data |
 | `tests/saveGame.test.ts` | 20 | save/load round trip, clue/variable/history preservation, terminal states, missing/malformed/incompatible/wrong-story/tampered data, schema and story identity, storage exceptions and quota |
 | `tests/saveSession.test.tsx` | 12 | session save/resume, checkpoint rebuild after load, recovery from a loaded failure, stale timers across load, corrupt save leaves the run intact, resume/overwrite/unavailable-storage UI |
+| `tests/presentation.model.test.ts` | 19 | scene metadata resolution and defaults, canonical-id references, malformed/duplicate/unknown metadata, asset manifest rules, warn-once for unknown ids |
+| `tests/presentation.assets.test.ts` | 4 | manifest structure (`npm run assets:check`), every supplied file exists in `public/`, pending-artwork report |
+| `tests/sceneBackdrop.test.tsx` | 13 | gradient fallback, image load/error handling, focal point, stale-load protection, scene swap, reduced motion, decorative layer |
+| `tests/cinematic.integration.test.tsx` | 9 | presentation cannot advance the story, no duplicate transitions mid-fade, timed default fires once, save/resume intact, title/failure/ending screens unaffected, keyboard activation |
 
 ---
 
-## Known limitations (Phase 4 scope)
+## Known limitations (Phase 5 scope)
 
 * Chapter 1 is complete as *content*; Chapters 2+ are not written. The three endings each carry a
   Chapter-2 hook, but no Chapter 2 exists yet.
+* **No final artwork is shipped.** All 32 scenes render fallback gradients; the presentation layer,
+  asset manifest and naming convention are ready for the illustrations (see
+  [docs/art-assets.md](docs/art-assets.md)).
+* One image per asset id: there are no per-breakpoint art variants, no parallax and no video.
 * Saves are a single local slot per browser origin: no multiple slots, no export/import, no cloud
   sync, no encryption. Clearing site data deletes the save.
 * The countdown is wall-clock based, so a backgrounded decision can expire while the tab is hidden;

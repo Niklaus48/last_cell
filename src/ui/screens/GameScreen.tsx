@@ -6,11 +6,15 @@ import { toPersianDigits } from '../format';
 import { toPersianError } from '../messages';
 import type { StoryEngineError } from '../../story/engine';
 import type { SceneViewModel } from '../../story/state/sceneView';
+import type { ScenePresentation } from '../../presentation';
+import { SceneBackdrop } from '../scene/SceneBackdrop';
 import type { ActiveTimedDecision } from '../../app/useTimedDecision';
 import type { SaveFeedback } from '../../app/useStorySession';
 
 interface GameScreenProps {
   readonly view: SceneViewModel;
+  /** Resolved visual presentation of the current scene. */
+  readonly presentation: ScenePresentation;
   readonly transitionCount: number;
   readonly lastError: StoryEngineError | null;
   /** Persian label when the engine created a checkpoint for this scene. */
@@ -30,6 +34,7 @@ interface GameScreenProps {
 
 export function GameScreen({
   view,
+  presentation,
   transitionCount,
   lastError,
   checkpointLabel,
@@ -56,11 +61,9 @@ export function GameScreen({
   };
 
   return (
-    <main
-      className="screen screen--game"
-      style={{ background: view.asset.backdrop }}
-      aria-label="صحنهٔ داستان"
-    >
+    <main className="screen screen--game" aria-label="صحنهٔ داستان">
+      <SceneBackdrop presentation={presentation} />
+
       <div className="game-topbar">
         <span className="game-topbar__step">
           صحنهٔ {toPersianDigits(view.step)}
