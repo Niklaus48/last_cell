@@ -12,7 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "feature:new": "bash scripts/new-feature.sh",
+    "publish": "bash scripts/publish.sh"
   },
   "dependencies": {
     "react": "^19.3.1",

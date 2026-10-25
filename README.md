@@ -57,6 +57,37 @@ Vitest's optional `canvas` peer dependency. Keep it unless a newer npm is used.
 
 ---
 
+## Git workflow
+
+**Every feature is developed on its own `feature/<slug>` branch and pushed to `origin`.**
+`main` is never published to directly — the scripts refuse it.
+
+```bash
+npm run feature:new -- phase-2-timed-choices   # ./scripts/new-feature.sh <slug>
+# ...develop, then...
+npm run publish -- "feat: timed decision countdown"   # ./scripts/publish.sh ["message"]
+```
+
+`scripts/new-feature.sh` branches off an up-to-date `main` (fetching first when a remote
+exists). `scripts/publish.sh` stages and commits any pending work on the current feature
+branch, then pushes it with `git push -u origin <branch>`, so the branch is tracked (and a PR
+can be opened) after the first push. Nothing is force-pushed and `main` is never rewritten.
+
+Start a run with the current state of the repo:
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | integration branch |
+| `feature/phase-1-foundation` | Phase 1: foundation and story engine |
+
+`origin` must be configured before the first push:
+
+```bash
+git remote add origin git@github.com:<owner>/<repo>.git   # or https://…
+```
+
+---
+
 ## Playing the demo
 
 1. `npm run dev`
