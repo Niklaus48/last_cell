@@ -1,0 +1,22 @@
+# Logs
+*.log
+npm-debug.log*
+
+node_modules/
+dist/
+coverage/
+*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Build info
+*.tsbuildinfo
+
+# Local tool caches (npm, playwright, etc.)
+.npm/
+.cache/
+.sudo_as_admin_successful

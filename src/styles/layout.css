@@ -1,0 +1,231 @@
+/* Layout is portrait-first and fluid: no fixed heights, no fixed widths that
+   could break small Android screens. Uses logical properties for RTL. */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  padding-block: max(var(--space-6), env(safe-area-inset-top))
+    max(var(--space-6), env(safe-area-inset-bottom));
+  padding-inline: var(--space-5);
+}
+
+.screen > * {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+/* ---------- Title screen ---------- */
+.screen--title {
+  justify-content: center;
+  gap: var(--space-5);
+  text-align: center;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(184 118 58 / 10%), transparent 60%),
+    linear-gradient(180deg, #0a0d12 0%, #07090c 100%);
+}
+
+.title-art {
+  display: grid;
+  place-items: center;
+  margin-block-end: var(--space-2);
+}
+
+.title-art__bars {
+  display: block;
+  width: 76px;
+  height: 76px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(234 230 223 / 26%) 0 3px,
+    transparent 3px 9px
+  );
+  box-shadow: inset 0 0 40px rgb(0 0 0 / 60%), 0 0 0 6px rgb(255 255 255 / 2%);
+  opacity: 0.75;
+}
+
+.title-header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.title-header__eyebrow {
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.title-header__title {
+  font-size: var(--font-size-display);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.title-header__subtitle {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.title-body {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.95;
+}
+
+.title-actions {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.title-actions .button {
+  width: 100%;
+}
+
+.title-actions__note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.7;
+}
+
+/* ---------- Game screen ---------- */
+.screen--game {
+  gap: var(--space-4);
+  background-color: var(--color-backdrop);
+}
+
+.game-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.game-topbar__step {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.12em;
+}
+
+.game-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1;
+  padding-block-end: var(--space-4);
+}
+
+.game-content .choice-list {
+  /* Thumb-reachable: choices sit at the bottom of the viewport on phones. */
+  margin-block-start: auto;
+}
+
+/* ---------- Ending screen ---------- */
+.screen--ending {
+  justify-content: center;
+  gap: var(--space-4);
+  background:
+    radial-gradient(100% 70% at 50% 100%, rgb(184 118 58 / 8%), transparent 65%),
+    #07090c;
+}
+
+.ending-tone {
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.28em;
+}
+
+.ending-title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.ending-summary {
+  color: var(--color-text-soft);
+}
+
+.ending-stats {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ending-stats__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ending-stats__row dd {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.screen--ending .button {
+  width: 100%;
+}
+
+.ending-footnote {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+/* ---------- Wider screens ---------- */
+@media (min-width: 48rem) {
+  /* Wide screens do not have a thumb-reach problem: keep choices near the text. */
+  .game-content .choice-list {
+    margin-block-start: var(--space-6);
+  }
+
+  .screen {
+    padding-inline: var(--space-6);
+    padding-block: var(--space-7);
+  }
+
+  .screen > * {
+    max-width: 38rem;
+  }
+
+  :root {
+    --font-size-base: 1.0625rem;
+  }
+
+  .choice-button {
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (min-width: 64rem) {
+  .screen--game .game-content {
+    gap: var(--space-6);
+  }
+
+  .screen > * {
+    max-width: 42rem;
+  }
+}
+
+/* Short screens (landscape phones): keep content reachable, allow scrolling. */
+@media (max-height: 30rem) {
+  .screen {
+    min-height: auto;
+    padding-block: var(--space-4);
+  }
+
+  .title-art {
+    display: none;
+  }
+}
