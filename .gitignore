@@ -16,6 +16,9 @@ coverage/
 # Build info
 *.tsbuildinfo
 
+# Session credentials (kept out of git; see scripts/git-session.sh)
+.config/
+
 # Local git rescue artifacts (bundles/patches exported for manual recovery)
 .git-backup/
 

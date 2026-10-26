@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
     "feature:new": "bash scripts/new-feature.sh",
+    "git:session": "bash scripts/git-session.sh",
     "publish": "bash scripts/publish.sh"
   },
   "dependencies": {

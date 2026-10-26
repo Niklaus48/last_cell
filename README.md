@@ -99,11 +99,39 @@ Start a run with the current state of the repo:
 | `main` | integration branch |
 | `feature/phase-1-foundation` | Phase 1: foundation and story engine |
 
-`origin` must be configured before the first push:
+### Restoring git in a fresh session
+
+`.git/config` is excluded from workspace snapshots, so the remote and its credentials do not
+survive between sessions (and occasionally the whole `.git` directory is missing). One command
+fixes all of it — no token pasted into a chat:
 
 ```bash
-git remote add origin git@github.com:<owner>/<repo>.git   # or https://…
+./scripts/git-session.sh            # npm run git:session
 ```
+
+It will:
+
+1. re-clone the history from `origin` if `.git` is gone, and point `HEAD` at the work branch
+   **without touching a single working file** (local work is never overwritten);
+2. re-apply `origin` with the stored token;
+3. set the commit identity, `core.fileMode false` (the snapshot drops exec bits, which used to
+   show up as phantom modifications) and drop any in-repo `credential.helper`;
+4. print branch, HEAD, tree state and an `auth OK / FAILED` check against the remote.
+
+Options: `--push` (restore, then push the current branch; refuses `main`/`master`),
+`--backup` (also write a bundle to `.git-backup/`), `--save-token` (store a token from stdin).
+
+The token lives in **`~/.config/last-cell/github-token`** (mode `600`), i.e. *outside* the
+repository, so it can never be committed, and it is not on the snapshot exclusion list, so it
+persists. Store or replace it once:
+
+```bash
+./scripts/git-session.sh --save-token <<< "github_pat_…"   # then revoke that token in the chat history
+```
+
+Use a fine-grained PAT limited to this repository with **Contents: Read and write**, and set
+*no expiration* if you do not want to repeat this. `GITHUB_TOKEN=… ./scripts/git-session.sh`
+overrides the stored token for a single run.
 
 ---
 
