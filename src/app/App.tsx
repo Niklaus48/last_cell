@@ -8,6 +8,7 @@ import {
 } from '../story/state/sceneView';
 import type { Checkpoint, StoryEngine, StoryEngineError, StoryState } from '../story/engine';
 import type { ActiveTimedDecision } from './useTimedDecision';
+import type { NarrationFlowState } from './useNarrationFlow';
 import type { SaveAvailability, SaveStorage } from '../persistence';
 import { getScenePresentation } from '../presentation';
 import type { SaveFeedback } from './useStorySession';
@@ -60,6 +61,7 @@ export function App({ storyKey = DEFAULT_STORY_KEY, storage }: AppProps = {}): R
       transitionCount={session.transitionCount}
       checkpoints={session.checkpoints}
       timedDecision={session.timedDecision}
+      flow={session.flow}
       isCommitting={session.isCommitting}
       storageAvailable={session.storageAvailable}
       hasSave={session.saveAvailability.status === 'valid'}
@@ -94,6 +96,7 @@ interface PlaySessionProps {
   readonly transitionCount: number;
   readonly checkpoints: readonly Checkpoint[];
   readonly timedDecision: ActiveTimedDecision | null;
+  readonly flow: NarrationFlowState;
   readonly isCommitting: boolean;
   readonly storageAvailable: boolean;
   readonly hasSave: boolean;
@@ -112,6 +115,7 @@ function PlaySession({
   transitionCount,
   checkpoints,
   timedDecision,
+  flow,
   isCommitting,
   storageAvailable,
   hasSave,
@@ -159,6 +163,7 @@ function PlaySession({
       lastError={lastError}
       checkpointLabel={checkpoint?.label ?? null}
       timedDecision={timedDecision}
+      flow={flow}
       isCommitting={isCommitting}
       storageAvailable={storageAvailable}
       hasSave={hasSave}

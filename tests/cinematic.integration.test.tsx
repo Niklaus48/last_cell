@@ -12,6 +12,7 @@ import userEvent from '@testing-library/user-event';
 import { App } from '../src/app/App';
 import type { SaveStorage } from '../src/persistence';
 import { CHAPTER1_SCENE } from '../src/story/content/chapter1';
+import { openChoices } from './helpers/flow';
 
 function fakeStorage(initial: string | null = null): SaveStorage & {
   readonly raw: () => string | null;
@@ -33,7 +34,12 @@ const start = (): void => {
   fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
 };
 
+/**
+ * Picks a choice. Since Phase 6 every scene opens with its narration stage, so
+ * the gate is opened first — which is exactly what a player does.
+ */
 const click = (pattern: RegExp): void => {
+  openChoices();
   fireEvent.click(screen.getByRole('button', { name: pattern }));
 };
 
@@ -64,6 +70,13 @@ describe('presentation on the real screen', () => {
     start();
 
     expect(backdrop().getAttribute('data-scene-id')).toBe(CHAPTER1_SCENE.cellDawn);
+    // Narration first: the backdrop and the narration are already there, the
+    // choices are not (Phase 6 gate).
+    expect(document.querySelector('.narration-gate')?.getAttribute('data-flow-phase')).toBe(
+      'scene_narration',
+    );
+    expect(screen.queryByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ })).toBeNull();
+    openChoices();
     // Fallback artwork only — no final art has been supplied.
     expect(backdrop().getAttribute('data-image-status')).toBe('idle');
     expect(document.querySelector('.scene-layer--gradient')).not.toBeNull();
@@ -129,7 +142,11 @@ describe('presentation on the real screen', () => {
     start();
     click(/میلهٔ دریچهٔ هوا را دوباره/);
     click(/دست نمی‌زنم؛ میله/);
+    // The stranger scene is new: its narration and announcement come first.
+    openChoices();
 
+    // The stranger scene declares a 12-second decision: the full countdown
+    // appears only now that the choices are on screen.
     expect(screen.getByText(/زمان تصمیم: ۱۲ ثانیه/)).not.toBeNull();
 
     act(() => {
@@ -152,6 +169,7 @@ describe('presentation on the real screen', () => {
     render(<App storyKey="chapter1" storage={null} />);
     start();
 
+    openChoices();
     await user.tab();
     // Walk to a choice button, then activate it from the keyboard.
     let guard = 0;

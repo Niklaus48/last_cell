@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../src/app/App';
+import { choicesVisible, openChoices } from './helpers/flow';
 
 describe('<App />', () => {
   it('loads Chapter 1 by default', async () => {
@@ -18,6 +19,7 @@ describe('<App />', () => {
 
     expect(screen.getByText('فصل اول — شش ماه سکوت')).not.toBeNull();
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
 
     // The shipped story opens in the cell, five minutes before the escape.
     expect(
@@ -35,6 +37,7 @@ describe('<App />', () => {
     expect(screen.getByRole('heading', { name: 'آخرین سلول' })).not.toBeNull();
 
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
 
     expect(screen.getByRole('heading', { name: 'سلول ۱۴' })).not.toBeNull();
     expect(screen.getByRole('button', { name: /حرف می‌زنم/ })).not.toBeNull();
@@ -45,7 +48,9 @@ describe('<App />', () => {
     render(<App storyKey="demo" />);
 
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     await user.click(screen.getByRole('button', { name: /حرف می‌زنم/ }));
+    openChoices();
 
     // Engine sent us to the interrogation scene.
     expect(screen.getByRole('heading', { name: 'روی صندلی' })).not.toBeNull();
@@ -66,9 +71,11 @@ describe('<App />', () => {
     render(<App storyKey="demo" />);
 
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     // Taking the silent branch never raises suspicion, so the lawyer option is
     // absent from the whole path.
     await user.click(screen.getByRole('button', { name: /سکوت می‌کنم/ }));
+    openChoices();
     expect(screen.queryByRole('button', { name: /وکیل می‌خواهم/ })).toBeNull();
   });
 });
@@ -79,12 +86,15 @@ describe('<App /> failure and recovery', () => {
     render(<App storyKey="demo" />);
 
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     await user.click(screen.getByRole('button', { name: /سکوت می‌کنم/ }));
+    openChoices();
 
     // The corridor scene declares a checkpoint, so the UI reports it.
     expect(screen.getByText(/نقطهٔ امن: راهروی بند/)).not.toBeNull();
 
     await user.click(screen.getByRole('button', { name: /به تای پوشه نگاه می‌کنم/ }));
+    openChoices();
     expect(screen.getByRole('heading', { name: 'روی صندلی' })).not.toBeNull();
 
     await user.click(screen.getByRole('button', { name: /روی نگهبان فشار می‌آورم/ }));
@@ -100,6 +110,10 @@ describe('<App /> failure and recovery', () => {
     // Back in the corridor scene: the clue found after the checkpoint is gone,
     // so the clue-gated choice is no longer offered.
     expect(screen.getByRole('heading', { name: 'سکوت، اولین پاسخ' })).not.toBeNull();
+    // Recovery starts that scene again at its narration: no choices yet, and the
+    // clue-gated option is never offered even after the gate opens.
+    expect(choicesVisible()).toBe(false);
+    openChoices();
     expect(screen.queryByRole('button', { name: /برگهٔ جدا‌شده/ })).toBeNull();
   });
 
@@ -108,7 +122,9 @@ describe('<App /> failure and recovery', () => {
     render(<App storyKey="demo" />);
 
     await user.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     await user.click(screen.getByRole('button', { name: /حرف می‌زنم/ }));
+    openChoices();
     await user.click(screen.getByRole('button', { name: /روی نگهبان فشار می‌آورم/ }));
 
     expect(screen.getByRole('heading', { name: /نگهبان خبر می‌شود/ })).not.toBeNull();

@@ -588,3 +588,88 @@ kbd {
   animation: none !important;
   transform: none !important;
 }
+
+/* ---------- Narration gate (Phase 6) ---------- */
+/*
+ * Reading stages of a scene: narration pause, then the narrator's announcement.
+ * The Continue action sits where the choices will later appear, so nothing jumps
+ * under the player's finger, and the block never covers the narration.
+ */
+.narration-gate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+}
+
+.narration-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.narration-gate__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Announcement: text, not buttons. Nothing here is selectable or focusable. */
+.choice-announcement {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgb(10 13 18 / 55%);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: announcement-fade-in 320ms ease-out both;
+}
+
+.choice-announcement__heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.choice-announcement__lead {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+}
+
+.choice-announcement__list {
+  margin: 0;
+  padding-inline-start: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--color-text);
+  line-height: 1.9;
+}
+
+.choice-announcement__item {
+  list-style: persian;
+}
+
+@keyframes announcement-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-announcement {
+    animation: none;
+  }
+}

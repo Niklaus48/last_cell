@@ -483,6 +483,37 @@ already left cannot repaint the current scene.
 
 ---
 
+## Narration gate (Phase 6)
+
+Orchestration lives in `src/app/`, between the engine and the screens:
+
+```
+src/app/narrationFlow.ts   pure model: stages, reading pauses, announcement, stage keys
+src/app/useNarrationFlow.ts React binding: one pending stage timer, exactly-once advance
+src/app/useStorySession.ts  owns the flow, passes `gateOpen` to the countdown, refuses
+                            choices while the gate is closed
+src/ui/components/NarrationGate.tsx  the Continue action + the announcement block
+```
+
+* **Stage sequence.** `scene_narration → choice_announcement → choices_available`, with the
+  announcement skipped when the engine reports no available choice.
+* **Derived, not persisted.** The stage is a function of `epoch#sceneId#history.length` plus
+  its own small state. Nothing about it enters the save envelope, so restoring always begins
+  at the narration and a save can never leak interactive choices.
+* **One timer per stage.** `stageDurationMs()` is the only source of a reading pause; the hook
+  holds at most one pending `setTimeout`, cleared on phase change, scene change, session
+  replacement, unmount and `visibilitychange` catch-up.
+* **Exactly-once advance.** Continue and the timer both call the same function, guarded by the
+  stage key; a click landing one tick before the timeout still advances a single stage.
+* **Countdown gating.** `useTimedDecision` accepts `gateOpen` and folds it into the decision
+  key, so while the gate is closed no interval, deadline or callback exists — and when it opens,
+  a fresh deadline is computed from the full `durationMs`.
+* **Defence in depth.** `commit()` in `useStorySession` refuses a choice unless the stage is
+  `choices_available`, so a stale handler or a programmatic call cannot bypass the engine flow
+  (the engine still validates the choice itself).
+
+---
+
 ## Implemented vs deferred
 
 **Implemented (Phase 2):** typed atomic transitions with change summaries, declarative
@@ -505,7 +536,12 @@ with full validation, typed failures and checkpoint replay; 69 new tests.
 asset manifest as the single id→file mapping, focal-point crop, camera presets, fades, overlays,
 total fallbacks, reduced-motion handling and 45 tests. Final artwork is deliberately absent.
 
-**Deferred (Phase 4–5 non-goals):** multiple save slots, save export/import, cloud sync,
+**Implemented (Phase 6):** narration-gated decisions — a typed stage model, reading pauses,
+a narrator announcement built from available choice labels only, a countdown that starts when
+the choices appear, and save/load behaviour that derives the stage instead of storing it.
+
+**Deferred (Phase 4–6 non-goals):** narration audio/voice, paragraph-by-paragraph reveals,
+reading pauses scaled to text length, plus the Phase 4–5 items below. multiple save slots, save export/import, cloud sync,
 encryption, pausing a countdown while a tab is hidden, per-breakpoint art variants, parallax,
 audio, and the illustrations themselves.
 

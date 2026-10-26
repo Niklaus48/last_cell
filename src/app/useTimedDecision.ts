@@ -7,6 +7,10 @@
  * timeout beyond naming the declared default choice, and it never touches story
  * rules — it simply asks the session to apply that choice like any other.
  *
+ * The clock is gated: `gateOpen` is false until the narration flow has finished
+ * announcing the choices and the choice buttons are actually on screen. Only
+ * then does a decision start, and it starts from the full declared duration.
+ *
  * Guarantees, each covered by a test:
  * - one countdown per decision, keyed by scene + path length, so a re-render
  *   (including a countdown tick) never restarts it or replays narration;
@@ -43,6 +47,12 @@ export interface UseTimedDecisionOptions {
   readonly state: StoryState | null;
   /** False on the title screen and on any non-playable screen. */
   readonly active: boolean;
+  /**
+   * False while the scene is still being presented, read, or announced. The
+   * countdown does not exist at all in that state: no interval, no deadline, and
+   * nothing for a late callback to resolve.
+   */
+  readonly gateOpen?: boolean;
   /** Called at most once per decision, when the declared duration elapses. */
   readonly onExpire: (expiry: TimedDecisionExpiry) => void;
   /** Monotonic clock; injectable so tests can move time without sleeping. */
@@ -65,6 +75,7 @@ export function useTimedDecision({
   engine,
   state,
   active,
+  gateOpen = true,
   onExpire,
   now,
   tickMs = COUNTDOWN_TICK_MS,
@@ -86,8 +97,10 @@ export function useTimedDecision({
   const scene = playable && state !== null ? engine.getCurrentScene(state) : null;
   const timed = scene?.timedDecision ?? null;
 
+  // The gate is part of the identity: closing and reopening it (a new scene, a
+  // restored run, or leaving the narration stages) is always a fresh decision.
   const key =
-    playable && state !== null && timed !== null
+    playable && gateOpen && state !== null && timed !== null
       ? `${epoch}#${state.currentSceneId}#${state.history.length}#${timed.durationMs}`
       : null;
   const sceneId = playable && state !== null ? state.currentSceneId : null;

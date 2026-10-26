@@ -10,6 +10,7 @@ import { useStorySession } from '../src/app/useStorySession';
 import type { SaveStorage } from '../src/persistence';
 import { SAVE_NONE_MESSAGE, SAVE_SUCCESS_MESSAGE } from '../src/ui/messages';
 import { CHAPTER1_SCENE } from '../src/story/content/chapter1';
+import { openChoices } from './helpers/flow';
 
 interface FakeStorage extends SaveStorage {
   readonly raw: () => string | null;
@@ -74,7 +75,19 @@ function sessionWith(storage: SaveStorage | null) {
   const hook = renderHook(() =>
     useStorySession('chapter1', { storage, now: () => clock.value }),
   );
+  /** Crosses the current scene's reading stages, as the Continue action does. */
+  const openGate = (): void => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (hook.result.current.flow.phase === 'choices_available') {
+        return;
+      }
+      act(() => {
+        hook.result.current.flow.continue();
+      });
+    }
+  };
   const step = (choiceId: string): void => {
+    openGate();
     act(() => {
       hook.result.current.choose(choiceId);
     });
@@ -94,7 +107,7 @@ function sessionWith(storage: SaveStorage | null) {
     }
     return current.state;
   };
-  return { ...hook, clock, step, advance, playing };
+  return { ...hook, clock, step, openGate, advance, playing };
 }
 
 beforeEach(() => {
@@ -261,12 +274,22 @@ describe('timers and loading', () => {
     for (const choiceId of TO_STRANGER) {
       session.step(choiceId);
     }
+    // Reach the decision stage, where the clock is allowed to run, then save
+    // mid-countdown.
+    session.openGate();
     act(() => session.result.current.save());
 
     session.advance(10000);
     expect(session.result.current.timedDecision?.remainingSeconds).toBe(2);
 
     act(() => session.result.current.load());
+
+    // Phase 6: a restored scene starts at its narration. No countdown exists
+    // until the choices are on screen again, and then it is the full duration.
+    expect(session.result.current.flow.phase).toBe('scene_narration');
+    expect(session.result.current.timedDecision).toBeNull();
+
+    session.openGate();
     expect(session.result.current.timedDecision?.remainingSeconds).toBe(12);
   });
 
@@ -281,6 +304,7 @@ describe('timers and loading', () => {
     // Walk into the timed decision and let its countdown run.
     session.step('test-the-bar');
     session.step('leave-it');
+    session.openGate();
     expect(session.result.current.timedDecision).not.toBeNull();
     session.advance(9000);
 
@@ -306,6 +330,8 @@ describe('save and resume in the interface', () => {
     expect(screen.getByText(SAVE_NONE_MESSAGE)).not.toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ }));
 
     fireEvent.click(screen.getByRole('button', { name: /ذخیرهٔ بازی در همین مرورگر/ }));
@@ -325,6 +351,8 @@ describe('save and resume in the interface', () => {
     render(<App storyKey="chapter1" storage={storage} />);
 
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ }));
 
     fireEvent.click(screen.getByRole('button', { name: /ذخیرهٔ بازی در همین مرورگر/ }));
@@ -365,6 +393,7 @@ describe('save and resume in the interface', () => {
     expect(screen.getByText('ذخیره‌سازی محلی در این مرورگر در دسترس نیست.')).not.toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     const save = screen.getByRole('button', { name: /ذخیرهٔ بازی در همین مرورگر/ });
     expect(save.hasAttribute('disabled')).toBe(true);
   });

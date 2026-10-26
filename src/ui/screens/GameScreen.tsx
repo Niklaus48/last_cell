@@ -8,6 +8,8 @@ import type { StoryEngineError } from '../../story/engine';
 import type { SceneViewModel } from '../../story/state/sceneView';
 import type { ScenePresentation } from '../../presentation';
 import { SceneBackdrop } from '../scene/SceneBackdrop';
+import { NarrationGate } from '../components/NarrationGate';
+import type { NarrationFlowState } from '../../app/useNarrationFlow';
 import type { ActiveTimedDecision } from '../../app/useTimedDecision';
 import type { SaveFeedback } from '../../app/useStorySession';
 
@@ -21,6 +23,8 @@ interface GameScreenProps {
   readonly checkpointLabel: string | null;
   /** Live countdown when the current scene declares a timed decision. */
   readonly timedDecision: ActiveTimedDecision | null;
+  /** Narration stage of the scene: choices exist only in `choices_available`. */
+  readonly flow: NarrationFlowState;
   /** True while a transition or save/load is being applied. */
   readonly isCommitting: boolean;
   readonly storageAvailable: boolean;
@@ -39,6 +43,7 @@ export function GameScreen({
   lastError,
   checkpointLabel,
   timedDecision,
+  flow,
   isCommitting,
   storageAvailable,
   hasSave,
@@ -139,9 +144,28 @@ export function GameScreen({
           </p>
         )}
 
-        {timedDecision !== null && <TimedDecisionBanner countdown={timedDecision} />}
+        {/*
+          Reading stages: the choices are not rendered at all, so there is no
+          button to click, focus, or activate from the keyboard, and no countdown
+          exists yet. The engine additionally refuses any choice while the gate
+          is closed.
+        */}
+        {flow.canContinue && (
+          <NarrationGate
+            phase={flow.phase}
+            announcement={flow.announcement}
+            onContinue={flow.continue}
+          />
+        )}
 
-        <ChoiceList choices={view.choices} onSelect={onSelect} disabled={isCommitting} />
+        {/* Decision stage: rendered only now, which is when the clock may start. */}
+        {flow.choicesEnabled && timedDecision !== null && (
+          <TimedDecisionBanner countdown={timedDecision} />
+        )}
+
+        {flow.choicesEnabled && (
+          <ChoiceList choices={view.choices} onSelect={onSelect} disabled={isCommitting} />
+        )}
       </div>
     </main>
   );

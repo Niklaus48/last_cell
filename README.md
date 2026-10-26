@@ -18,6 +18,9 @@ Final illustrations, audio, cloud saves and Android packaging are *not* implemen
   declared default, and local save/resume built on the existing snapshot format.
 * Phase 5 — cinematic presentation: per-scene artwork, focal points, slow camera moves,
   fades, atmospheric overlays, and a documented asset contract for the final images.
+* Phase 6 — narration-gated decisions: every scene is presented, read and announced before
+  its choices become interactive, and a timed decision only starts counting once the
+  choice buttons are actually on screen.
 
 Chapter 1 narrative design and its consistency review:
 **[docs/chapter1-narrative-review.md](docs/chapter1-narrative-review.md)**.
@@ -179,6 +182,35 @@ metadata — no per-scene rendering code:
 Nothing in this layer can change choices, timed decisions, clues, checkpoints or endings — it is
 read-only decoration with tests that assert exactly that. Artwork workflow, dimensions, naming and
 focal-point guidance: **[docs/art-assets.md](docs/art-assets.md)**.
+
+### Narration-gated decisions
+
+A scene is a short, explicit sequence rather than "narration plus buttons":
+
+| Stage | What the player sees | What runs |
+| --- | --- | --- |
+| `scene_narration` | scene backdrop + narration, a **«ادامه»** action | one reading-pause timer (6 s) |
+| `choice_announcement` | the narrator introduces the available options as *text* | one reading-pause timer (4 s) |
+| `choices_available` | the choice buttons | the decision countdown, if the scene declares one |
+
+* **The choices are not rendered during the first two stages**, so there is no button to
+  click, focus, or reach from the keyboard — and the session refuses any choice while the
+  gate is closed, so a stale handler cannot sneak one through either.
+* **Continue is always available**, and manual and automatic progression share one guarded
+  function: exactly one of them advances a stage, never both.
+* **The countdown starts with the buttons**, not with the scene. A 12-second decision gives
+  twelve seconds from the moment the choices appear; nothing ticks during narration or the
+  announcement.
+* **Only available choices are announced.** The announcement is built from the engine's
+  condition-filtered list and reuses the story's own labels — no new dialogue.
+* **Scenes with nothing to announce skip that stage** instead of waiting for an option that
+  does not exist.
+* **The stage is derived, never saved.** A restored run starts its scene from the narration,
+  so a save can never expose choices or a countdown the player never reached.
+* **Pauses scale with the text.** A five-paragraph scene is given far longer than a one-line
+  one, within declared bounds, so a long scene is never rushed. The numbers live in one typed
+  configuration (`NARRATION_TIMING` in `src/app/narrationFlow.ts`), which is also where future
+  narration *audio* would hook in.
 
 ### The dev fixture
 
@@ -343,7 +375,7 @@ Design decisions worth knowing:
 
 ## Tests
 
-`npm run test` currently runs **323 tests in 21 files** (`npm run assets:check` runs the artwork
+`npm run test` currently runs **362 tests in 23 files** (`npm run assets:check` runs the artwork
 manifest check on its own):
 
 | File | Tests | Covers |
@@ -368,11 +400,13 @@ manifest check on its own):
 | `tests/presentation.model.test.ts` | 19 | scene metadata resolution and defaults, canonical-id references, malformed/duplicate/unknown metadata, asset manifest rules, warn-once for unknown ids |
 | `tests/presentation.assets.test.ts` | 4 | manifest structure (`npm run assets:check`), every supplied file exists in `public/`, pending-artwork report |
 | `tests/sceneBackdrop.test.tsx` | 13 | gradient fallback, image load/error handling, focal point, stale-load protection, scene swap, reduced motion, decorative layer |
+| `tests/narrationFlowModel.test.ts` | 15 | stage order and the announcement skip for choice-less scenes, centralised reading pauses, stage identity, announcement reuse of choice labels |
+| `tests/narrationGate.test.tsx` | 21 | no interactive choice before the announcement, Continue advances once, auto-pause progression, manual-vs-auto races, unmount/restart/load cleanup, only available choices announced, full countdown after the gate, manual cancel, gated `choose`, save/load before narration, recovery through the gate |
 | `tests/cinematic.integration.test.tsx` | 9 | presentation cannot advance the story, no duplicate transitions mid-fade, timed default fires once, save/resume intact, title/failure/ending screens unaffected, keyboard activation |
 
 ---
 
-## Known limitations (Phase 5 scope)
+## Known limitations (Phase 6 scope)
 
 * Chapter 1 is complete as *content*; Chapters 2+ are not written. The three endings each carry a
   Chapter-2 hook, but no Chapter 2 exists yet.
@@ -380,6 +414,10 @@ manifest check on its own):
   asset manifest and naming convention are ready for the illustrations (see
   [docs/art-assets.md](docs/art-assets.md)).
 * One image per asset id: there are no per-breakpoint art variants, no parallax and no video.
+* Reading pauses are fixed durations (6 s narration, 4 s announcement); they do not scale with
+  paragraph length, and there is no typewriter/paragraph-by-paragraph reveal yet.
+* There is no narration audio. The flow is shaped so that a later audio stage can hold
+  `scene_narration` open until playback ends, but nothing plays today.
 * Saves are a single local slot per browser origin: no multiple slots, no export/import, no cloud
   sync, no encryption. Clearing site data deletes the save.
 * The countdown is wall-clock based, so a backgrounded decision can expire while the tab is hidden;

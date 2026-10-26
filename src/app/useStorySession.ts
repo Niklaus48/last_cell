@@ -10,6 +10,10 @@
  *
  * Persistence lives outside as well: this hook only decides *when* to call the
  * save layer and how to report the outcome. It never inspects snapshot JSON.
+ *
+ * It also owns the narration gate: a scene is presented, read, and announced
+ * before any choice is interactive or any countdown exists. The phase itself is
+ * derived (see `narrationFlow.ts`) and never saved.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -37,6 +41,8 @@ import {
   toPersianSaveMessage,
 } from '../ui/messages';
 import { useTimedDecision, type ActiveTimedDecision, type TimedDecisionExpiry } from './useTimedDecision';
+import { useNarrationFlow, type NarrationFlowState } from './useNarrationFlow';
+import type { NarrationTiming } from './narrationFlow';
 
 export type SessionPhase =
   | { readonly phase: 'title' }
@@ -60,6 +66,11 @@ export interface StorySession {
   readonly isCommitting: boolean;
   /** Live countdown for the current scene, or null when the scene is untimed. */
   readonly timedDecision: ActiveTimedDecision | null;
+  /**
+   * Current narration stage of the scene. While it is not `choices_available`
+   * the choices are not interactive and no countdown exists.
+   */
+  readonly flow: NarrationFlowState;
   /** Whether a resume-able local save exists (validated, not just present). */
   readonly saveAvailability: SaveAvailability;
   /** False when the browser refuses local storage entirely. */
@@ -103,6 +114,8 @@ export interface UseStorySessionOptions {
    * tests inject a manual clock so background-tab behaviour is deterministic.
    */
   readonly now?: (() => number) | undefined;
+  /** Reading pauses for the narration stages; defaults to `NARRATION_TIMING`. */
+  readonly narrationTiming?: NarrationTiming | undefined;
 }
 
 export function useStorySession(
@@ -127,6 +140,25 @@ export function useStorySession(
       return { status: 'none' };
     }
     return inspectSave({ storage, engine, storyKey });
+  });
+
+  const playableState =
+    session.phase === 'playing' && session.state.progress.status === 'playing' ? session.state : null;
+  /** Choices after condition evaluation — the only list the UI may ever show. */
+  const availableChoices = useMemo(
+    () => (playableState === null ? [] : engine.getAvailableChoices(playableState)),
+    [engine, playableState],
+  );
+
+  const flow = useNarrationFlow({
+    state: playableState,
+    active: playableState !== null,
+    epoch: sessionEpoch,
+    choices: availableChoices,
+    narrationParagraphs:
+      playableState === null ? 0 : engine.getCurrentScene(playableState).narration.length,
+    timing: options.narrationTiming,
+    now: options.now,
   });
 
   /**
@@ -161,6 +193,11 @@ export function useStorySession(
         return false;
       }
       if (state.progress.status !== 'playing') {
+        return false;
+      }
+      // The gate is checked here as well as in the UI, so no stale handler, late
+      // timeout or programmatic call can resolve a choice during narration.
+      if (flow.phase !== 'choices_available') {
         return false;
       }
 
@@ -204,7 +241,7 @@ export function useStorySession(
         setIsCommitting(false);
       }
     },
-    [engine, session],
+    [engine, session, flow.phase],
   );
 
   const start = useCallback(() => {
@@ -244,6 +281,8 @@ export function useStorySession(
     onExpire: onTimedExpiry,
     now: options.now,
     epoch: sessionEpoch,
+    // The decision clock only exists once the choice buttons are on screen.
+    gateOpen: flow.choicesEnabled,
   });
 
   const recover = useCallback(() => {
@@ -351,6 +390,7 @@ export function useStorySession(
     checkpoints,
     isCommitting,
     timedDecision,
+    flow,
     saveAvailability,
     storageAvailable: storage !== null,
     saveFeedback,

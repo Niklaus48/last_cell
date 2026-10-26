@@ -15,6 +15,7 @@ import { useTimedDecision } from '../src/app/useTimedDecision';
 import { createStoryEngine } from '../src/story/engine';
 import type { StoryEngine, StoryState } from '../src/story/engine';
 import { chapter1Story, CHAPTER1_SCENE } from '../src/story/content/chapter1';
+import { openChoices } from './helpers/flow';
 
 const engine = createStoryEngine(chapter1Story);
 
@@ -53,7 +54,25 @@ function sessionAt(choiceIds: readonly string[]) {
     useStorySession('chapter1', { storage: null, now: () => clock.value }),
   );
 
+  /**
+   * Moves the scene through its reading stages (narration → announcement) the
+   * way the Continue action does, so a choice can be picked legally.
+   */
+  const openGate = (): void => {
+    // One `act` per stage: each call must see the freshly rendered phase, and
+    // calling continue twice inside one flush is deliberately a no-op.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (hook.result.current.flow.phase === 'choices_available') {
+        return;
+      }
+      act(() => {
+        hook.result.current.flow.continue();
+      });
+    }
+  };
+
   const step = (choiceId: string): void => {
+    openGate();
     act(() => {
       hook.result.current.choose(choiceId);
     });
@@ -65,6 +84,9 @@ function sessionAt(choiceIds: readonly string[]) {
   for (const choiceId of choiceIds) {
     step(choiceId);
   }
+  // The last transition opens a new scene: finish its reading stages so the
+  // fixture ends at the decision stage, where a countdown is allowed to exist.
+  openGate();
 
   /** Advances the fake interval *and* the clock together (normal foreground). */
   const advance = (ms: number): void => {
@@ -89,7 +111,7 @@ function sessionAt(choiceIds: readonly string[]) {
     return current.state;
   };
 
-  return { ...hook, clock, step, advance, jumpClock, state };
+  return { ...hook, clock, step, openGate, advance, jumpClock, state };
 }
 
 beforeEach(() => {
@@ -110,7 +132,13 @@ describe('countdown lifecycle', () => {
     expect(session.result.current.timedDecision).toBeNull();
     session.step('leave-it');
 
+    // The new scene starts in its narration stage: the 12-second decision does
+    // not exist yet, so no clock can run.
     expect(session.state().currentSceneId).toBe(CHAPTER1_SCENE.strangerArrives);
+    expect(session.result.current.flow.phase).toBe('scene_narration');
+    expect(session.result.current.timedDecision).toBeNull();
+
+    session.openGate();
     expect(session.result.current.timedDecision).not.toBeNull();
     expect(session.result.current.timedDecision?.durationMs).toBe(12000);
     expect(session.result.current.timedDecision?.remainingSeconds).toBe(12);
@@ -278,6 +306,7 @@ describe('manual choice versus timeout', () => {
     });
     session.step('test-the-bar');
     session.step('leave-it');
+    session.openGate();
     expect(session.result.current.timedDecision?.remainingSeconds).toBe(12);
   });
 });
@@ -398,8 +427,11 @@ describe('the running countdown does not disturb the scene', () => {
     render(<App storyKey="chapter1" storage={null} />);
 
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /دست نمی‌زنم؛ میله/ }));
+    openChoices();
 
     const heading = screen.getByRole('heading', { name: /کسی که نام واقعی‌ات را می‌داند/ });
     const paragraph = screen.getByText(/صدایی از پشت در سلول می‌آید/);
@@ -420,8 +452,11 @@ describe('the running countdown does not disturb the scene', () => {
   it('shows an understandable Persian countdown with a progress bar', () => {
     render(<App storyKey="chapter1" storage={null} />);
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /دست نمی‌زنم؛ میله/ }));
+    openChoices();
 
     expect(screen.getByText(/زمان تصمیم: ۱۲ ثانیه/)).not.toBeNull();
     const bar = screen.getByRole('progressbar', { name: 'زمان باقی‌مانده برای تصمیم' });
@@ -441,8 +476,11 @@ describe('the running countdown does not disturb the scene', () => {
   it('announces only the urgency change, not every tick', () => {
     render(<App storyKey="chapter1" storage={null} />);
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /میلهٔ دریچهٔ هوا را دوباره/ }));
+    openChoices();
     fireEvent.click(screen.getByRole('button', { name: /دست نمی‌زنم؛ میله/ }));
+    openChoices();
 
     expect(screen.queryByText('زمان تصمیم رو به پایان است.')).toBeNull();
     act(() => {
