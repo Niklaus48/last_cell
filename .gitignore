@@ -16,6 +16,9 @@ coverage/
 # Build info
 *.tsbuildinfo
 
+# Local git rescue artifacts (bundles/patches exported for manual recovery)
+.git-backup/
+
 # Local tool caches (npm, playwright, etc.)
 .npm/
 .cache/
