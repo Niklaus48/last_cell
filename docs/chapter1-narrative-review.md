@@ -19,10 +19,12 @@ can be re-verified rather than trusted.
 
 ## 2. Narration
 
-* **One narrator, second person.** All 86 narration paragraphs are narrated by the same
-  voice; speech is reported *inside* narration (e.g. «…و بعد می‌گوید: "بالاخره روزش رسید،
-  کیان."»). No speaker labels, no dialogue windows, no first-person primary narration.
-  `chapter1.content` asserts no `Name:` patterns exist in any paragraph.
+* **One narrator, third person.** All 79 narration paragraphs are narrated by the same voice
+  about Kian; anything a character says is reported indirectly («مرد با آرامشی نامناسبِ این
+  ساعت، به او می‌فهماند که…», «غریبه مدعی است…»). No spoken dialogue is quoted, no speaker
+  labels, no dialogue windows, no first-person narration. `chapter1.content` asserts no
+  `Name:` patterns, and `chapter1.redesign` asserts that no paragraph uses «» for speech and
+  that no second-person address ("تو", "می‌کنی") leaks in.
 * **Choice labels are actions, not echoes.** Labels are first-person-singular actions
   («میلهٔ دریچهٔ هوا را دوباره امتحان می‌کنم.», «سکوت می‌کنم.») so the UI does not repeat the
   narration back at the player. `chapter1.content` asserts every label is Persian.
@@ -34,7 +36,9 @@ can be re-verified rather than trusted.
 
 ## 3. Graph shape
 
-* **32 scenes**, 69 choices (13 conditional). Acts I–VII, ending scenes included.
+* **37 scenes**, 84 choices (21 conditional, 62 with effects). Acts I–VII, ending scenes
+  included. The branching redesign (see §6) added five scenes and turned the corridor into a
+  set of state-dependent outcomes.
 * **No dead ends.** Every scene has at least one unconditional choice; the only loop
   (`locked door → safe corner → corridor → locked door`) costs one `planIntegrity` per lap and
   closes when the plan is spent — the door can still be forced, so the player is never stuck.
@@ -50,12 +54,12 @@ can be re-verified rather than trusted.
 | # | Requirement | Status | Evidence |
 | --- | --- | --- | --- |
 | 1 | Silence at the first encounter reveals nothing | **Met.** `stay-silent` grants no clue, no `strangerContact`, no `strangerKnowledge`; nothing is awarded later in that branch either | `chapter1.playthrough` ×2, `chapter1.content` |
-| 2 | The dated note is ambiguous, carries a date and a reference, and is only found by examining it | **Met.** Text: «اگر او را منتقل کردند، گزارش را تغییر نده.» + «۱۴ مهر» + «۴۱۷-ب»; obtained only via `pull-the-note` | `chapter1.content` (verbatim), `chapter1.playthrough` (three variants: skipped, declined, examined) |
+| 2 | The dated note is ambiguous, carries a date and a reference, and is only found by examining it | **Met.** The note is dated «چهاردهم مهر» with reference «۴۱۷-ب», unsigned and unattributed; obtained only via `pull-the-note`. `۴۱۷-ب` stays distinct from the cafeteria's `۹۲۰-۴` | `chapter1.content`, `chapter1.redesign` (number separation), `chapter1.playthrough` (three variants: skipped, declined, examined) |
 | 3 | Two routes with *different* information | **Met.** Office → transfer ledger + erased signature (`office_record_discrepancy`); service way → altered schedule board + trolley track (`schedule_reference`). Neither route yields the other's clue | `chapter1.playthrough` ×2 |
 | 4 | Routes converge while preserving state | **Met.** Both reach `ch1-corridor-mid` with their own clues and the variables earned before the split | `chapter1.playthrough` (convergence) |
 | 5 | Corridor initials «K. F.» stay unexplained | **Met.** Naraion records the scratched initials and Kian's refusal to explain them; no scene names who carved them | manual text review |
-| 6 | Lock/alternative/safe-point decision responds to clues, plan and suspicion | **Met.** `pick-the-bolt` needs `planIntegrity ≥ 1`, `look-for-another-way` needs `routeKnowledge ≥ 1`, `fall-back-to-the-safe-corner` needs `planIntegrity ≥ 1` and spends it, `slide-into-the-alcove` needs `guardSuspicion ≤ 1` | `chapter1.playthrough` (gating ×3) |
-| 7 | Timed guard encounter with a safe default | **Met.** `ch1-door-attempt`: 8000 ms, `defaultChoiceId: 'freeze-and-observe'`, an unconditional transition (never a failure) | `chapter1.content` (timers, safe default) |
+| 6 | Lock/alternative/safe-point decision responds to clues, plan, route knowledge and suspicion | **Met.** `pick-the-bolt` needs `planIntegrity ≥ 1`; `look-for-another-way` needs `routeKnowledge ≥ 2`; `fall-back-to-the-safe-corner` needs `planIntegrity ≥ 1` and spends it; `slide-into-the-alcove` needs `guardSuspicion ≤ 1` *and* `routeKnowledge ≥ 1`; `force-the-door` is always open and costs suspicion | `chapter1.playthrough` (gating), `chapter1.redesign` (vent, loop budget) |
+| 7 | Timed guard encounter with a safe default | **Met.** `ch1-door-attempt`: 8000 ms, `defaultChoiceId: 'freeze-and-observe'`, an unconditional transition into the guard's search scene — never a failure | `chapter1.content` (timers, safe default), `chapter1.redesign` (default usable from every state) |
 | 8 | Old telephone claim is inconsistent but unproven | **Met.** `telephone_date_claim` is recorded as *his* claim («می‌گوید») — the clue text and narration never adopt it as fact. Three contact choices: let him explain / demand something checkable / hang up | manual text review, `chapter1.playthrough` (C-gate paths) |
 | 9 | Final decision and a Chapter-2 hook | **Met.** Three routes out of `ch1-final-approach`, each ending with the required hook sentence as its summary | `chapter1.playthrough` (all three endings) |
 | 10 | Three tiered endings, not all visible in one run | **Met.** A = ambiguous truth (no evidence required); B = contradictory dossier (needs `death_record_contradiction`); C = possible connection (needs evidence **and** an open line to the stranger **and** limited mistakes). A finished run refuses further choices, so no second ending can follow | `chapter1.playthrough` ×8 |
@@ -89,3 +93,31 @@ comparison → junction → door → guard → archive → final approach → **
 required hook sentence with **0 console errors**. The failure screen (“دفتر بازرسی‌شده”) and its
 «بازگشت به آخرین نقطهٔ امن» recovery were exercised in the same session, and a conditional option
 (`search-the-old-folders`) was correctly absent once its precondition no longer held.
+
+---
+
+## 6. Branching redesign
+
+The chapter was re-authored so that the eight variables change *events*, not just numbers:
+
+| Variable | What it now decides |
+| --- | --- |
+| `guardSuspicion` | `freeze-quiet` (suspicion ≤ 1) → the torch passes; anything higher → `ch1-guard-search`; at the archive, suspicion ≥ 4 forces the quiet crossing; `wait-for-the-next-round` can bring it down by one |
+| `composure` | buys the safe responses: `wait-for-office-clear` (≥ 3), `search-steady` (≥ 4 with suspicion ≤ 3), `press-for-a-name` (≥ 2) — and the reckless choices take it away |
+| `planIntegrity` | a budget, not a counter: each retreat from the door spends one, and nothing in the loop gives one back |
+| `routeKnowledge` | unlocks `look-for-another-way` (≥ 2) and the vent; its sources are the corridor rhythm, the note, the schedule board and the trolley track |
+| `strangerContact` | whether a line exists at all: the alcove phone and the last call in the yard are both conditional on it |
+| `strangerTrust` / `strangerKnowledge` | trust (access and cooperation) is separate from knowledge (a count of claims, including ones Kian demanded) |
+| `criticalMistakes` | persistent cost of loud moves; it gates the strongest ending choice and survives recovery |
+
+New scenes: `ch1-cell-rehearsal`, `ch1-office-overheard`, `ch1-forced-door-noise`,
+`ch1-guard-search`, `ch1-schedule-file`. The three endings, two recoverable failures and three
+checkpoints are unchanged in id and meaning.
+
+Verification: `tests/chapter1.redesign.test.ts` (24 tests) covers all of the above, plus clue
+numbering, the timeline (death signed 12 Mehr, transfer 14 Mehr), the timed defaults, failure
+recovery and the narrator-only rules; `tests/chapter1.content.test.ts` still proves exhaustive
+reachability (every scene, choice, ending and failure, no dead ends) over the new graph. The
+full export in `exports/chapter1.pack.full.json` is generated from this canonical content by
+`npm run pack:full`; the Studio's compact export still writes `story: null` because the
+canonical story *is* the repository content.

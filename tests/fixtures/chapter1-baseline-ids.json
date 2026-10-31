@@ -1,0 +1,172 @@
+{
+  "note": "Scene and choice ids of the chapter as shipped before the branching redesign (commit 023bfa0). Used to prove that the redesign is additive for saved runs.",
+  "sceneIds": [
+    "ch1-alternative-route",
+    "ch1-cafeteria",
+    "ch1-cell-bar",
+    "ch1-cell-dawn",
+    "ch1-cell-listen",
+    "ch1-cell-search",
+    "ch1-contradiction-office",
+    "ch1-corridor-first",
+    "ch1-corridor-mid",
+    "ch1-door-attempt",
+    "ch1-ending-connection",
+    "ch1-ending-evidence",
+    "ch1-ending-plan",
+    "ch1-ending-thin",
+    "ch1-final-approach",
+    "ch1-guard-pass",
+    "ch1-leaving-cell",
+    "ch1-locked-door",
+    "ch1-note",
+    "ch1-office-desk",
+    "ch1-office-entry",
+    "ch1-office-ledger",
+    "ch1-phone",
+    "ch1-phone-talk",
+    "ch1-record-pull",
+    "ch1-records-alcove",
+    "ch1-service-entry",
+    "ch1-service-trolley",
+    "ch1-silence",
+    "ch1-stranger-arrives",
+    "ch1-stranger-threat",
+    "ch1-stranger-who"
+  ],
+  "choiceIdsByScene": {
+    "ch1-cell-dawn": [
+      "listen-to-the-corridor",
+      "rehearse-in-your-head",
+      "test-the-bar"
+    ],
+    "ch1-cell-bar": [
+      "ease-the-bolt",
+      "leave-it"
+    ],
+    "ch1-cell-listen": [
+      "go-back-to-the-bed",
+      "memorize-the-rhythm"
+    ],
+    "ch1-stranger-arrives": [
+      "ask-who-he-is",
+      "stay-silent",
+      "threaten-him"
+    ],
+    "ch1-silence": [
+      "wait-for-the-steps-to-fade"
+    ],
+    "ch1-stranger-who": [
+      "press-for-a-name",
+      "say-nothing-more"
+    ],
+    "ch1-stranger-threat": [
+      "keep-pressing",
+      "lower-your-voice"
+    ],
+    "ch1-leaving-cell": [
+      "search-the-cell-first",
+      "slip-out-now"
+    ],
+    "ch1-cell-search": [
+      "leave-it-where-it-is",
+      "pull-the-note"
+    ],
+    "ch1-note": [
+      "fold-it-into-your-sleeve",
+      "memorize-and-leave-it"
+    ],
+    "ch1-corridor-first": [
+      "take-the-office-way",
+      "take-the-service-way"
+    ],
+    "ch1-office-entry": [
+      "listen-at-the-door",
+      "slip-past-the-door"
+    ],
+    "ch1-office-desk": [
+      "memorize-the-room-and-go",
+      "read-the-transfer-ledger"
+    ],
+    "ch1-office-ledger": [
+      "close-the-folder",
+      "compare-with-a-number-you-know",
+      "take-the-loose-page"
+    ],
+    "ch1-contradiction-office": [
+      "close-it-and-move",
+      "study-the-erased-signature"
+    ],
+    "ch1-cafeteria": [
+      "cross-to-the-service-door",
+      "study-the-board"
+    ],
+    "ch1-service-entry": [
+      "follow-the-wet-track",
+      "head-straight-to-the-door"
+    ],
+    "ch1-service-trolley": [
+      "back-off-now",
+      "keep-following-the-track"
+    ],
+    "ch1-corridor-mid": [
+      "look-at-the-scratches",
+      "straight-to-the-door"
+    ],
+    "ch1-locked-door": [
+      "fall-back-to-the-safe-corner",
+      "force-the-door",
+      "look-for-another-way",
+      "pick-the-bolt"
+    ],
+    "ch1-door-attempt": [
+      "freeze-and-observe",
+      "press-the-pick",
+      "slide-into-the-alcove"
+    ],
+    "ch1-guard-pass": [
+      "take-the-hatch",
+      "wait-for-the-next-round"
+    ],
+    "ch1-alternative-route": [
+      "crawl-through-the-vent"
+    ],
+    "ch1-records-alcove": [
+      "answer-the-internal-phone",
+      "keep-moving",
+      "search-the-old-folders"
+    ],
+    "ch1-record-pull": [
+      "close-the-file",
+      "note-the-archive-number"
+    ],
+    "ch1-phone": [
+      "demand-something-checkable",
+      "hang-up",
+      "let-him-explain"
+    ],
+    "ch1-phone-talk": [
+      "ask-what-he-wants",
+      "end-the-call-yourself"
+    ],
+    "ch1-final-approach": [
+      "ask-for-evidence-first",
+      "ask-him-about-navid",
+      "go-with-the-plan"
+    ],
+    "ch1-ending-plan": [
+      "step-into-the-yard"
+    ],
+    "ch1-ending-evidence": [
+      "go-forward-without-proof",
+      "put-the-two-dates-together"
+    ],
+    "ch1-ending-connection": [
+      "ask-without-a-paper-in-your-hand",
+      "show-him-the-record"
+    ],
+    "ch1-ending-thin": [
+      "walk-out-anyway"
+    ]
+  }
+}

@@ -243,8 +243,9 @@ describe('stage B — narrator announces the choices', () => {
       'cross-to-the-service-door',
       'head-straight-to-the-door',
       'straight-to-the-door',
-      'force-the-door',
+      'pick-the-bolt',
       'freeze-and-observe',
+      'search-steady',
       'take-the-hatch',
       'keep-moving',
     ] as const;
@@ -268,7 +269,16 @@ describe('stage B — narrator announces the choices', () => {
     fireEvent.click(screen.getByRole('button', { name: /شروع فصل اول/ }));
     for (const choiceId of QUIET_ROUTE) {
       openChoices();
-      fireEvent.click(screen.getByRole('button', { name: labelOf(choiceId) }));
+      // Some options carry a visible condition line, so the accessible name is
+      // longer than the label: match on the label being part of the button.
+      const label = labelOf(choiceId);
+      const button = screen
+        .getAllByRole('button')
+        .find((candidate) => (candidate.textContent ?? '').includes(label));
+      if (button === undefined) {
+        throw new Error(`no button for ${choiceId} (${label})`);
+      }
+      fireEvent.click(button);
     }
 
     // Arrive at the scene and stop at the announcement stage.

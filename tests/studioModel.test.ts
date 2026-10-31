@@ -138,6 +138,18 @@ describe('draft editing', () => {
     expect(draftToPack(draft).story).toBeNull();
   });
 
+  it('keeps the compact export for a chapter that only changed in TypeScript', () => {
+    // The redesign lives in the canonical TS content, so an untouched draft is
+    // still a no-op diff: this is the `story: null` behaviour, on purpose.
+    const compact = draftToPack(createDraft());
+    expect(compact.story).toBeNull();
+
+    // …and the full export carries the redesign instead of the old chapter.
+    const full = draftToFullPack(createDraft());
+    expect(full.story?.scenes).toHaveLength(chapter1Story.scenes.length);
+    expect(full.story?.scenes.some((scene) => scene.id === 'ch1-guard-search')).toBe(true);
+  });
+
   it('can write the story out in full for tools that cannot read the TypeScript', () => {
     const draft = draftFromPack(EMPTY_PACK);
     const full = draftToFullPack(draft);
@@ -405,11 +417,17 @@ describe('rules shown on the tree', () => {
     const { buildTree: build } = await import('../src/studio/model');
     const tree = build(createDraft());
 
-    // `slide-into-the-alcove` needs guardSuspicion <= 1, and the story starts at 0,
-    // so that route is open on the first turn…
+    // `pick-the-bolt` needs planIntegrity >= 1, and the story starts at 3, so that
+    // route is open on the first turn…
+    const bolt = tree.edges.find((edge) => edge.choiceId === 'pick-the-bolt');
+    expect(bolt?.gated).toBe(true);
+    expect(bolt?.openAtStart).toBe(true);
+
+    // …while the alcove option is already shut: it needs guard-visible quiet *and*
+    // route knowledge, and the chapter starts with none of the latter.
     const alcove = tree.edges.find((edge) => edge.choiceId === 'slide-into-the-alcove');
     expect(alcove?.gated).toBe(true);
-    expect(alcove?.openAtStart).toBe(true);
+    expect(alcove?.openAtStart).toBe(false);
 
     // …while the ending that needs a discovered clue is not.
     const closed = tree.edges.filter((edge) => edge.gated && !edge.openAtStart);

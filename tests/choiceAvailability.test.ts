@@ -68,7 +68,7 @@ describe('getChoiceAvailability', () => {
   });
 
   it('reports a locked option with the variable, the requirement and the actual value', () => {
-    // `slide-into-the-alcove` needs guardSuspicion <= 1.
+    // `slide-into-the-alcove` needs guardSuspicion <= 1 *and* local knowledge.
     const scene = chapter1Story.scenes.find((entry) => entry.id === 'ch1-door-attempt');
     expect(scene).toBeDefined();
     const noisy: StoryState = {
@@ -83,6 +83,7 @@ describe('getChoiceAvailability', () => {
     expect(entry?.available).toBe(false);
     expect(entry?.unmet).toEqual([
       { kind: 'variable', variable: 'guardSuspicion', operator: 'lte', required: 1, actual: 3 },
+      { kind: 'variable', variable: 'routeKnowledge', operator: 'gte', required: 1, actual: 0 },
     ]);
   });
 
@@ -90,7 +91,7 @@ describe('getChoiceAvailability', () => {
     const calm: StoryState = {
       ...start,
       currentSceneId: 'ch1-door-attempt',
-      variables: { ...start.variables, guardSuspicion: 1 },
+      variables: { ...start.variables, guardSuspicion: 1, routeKnowledge: 1 },
     };
     const entry = engine
       .getChoiceAvailability(calm)
@@ -101,6 +102,10 @@ describe('getChoiceAvailability', () => {
     expect(entry?.requirements).toEqual([
       {
         requirement: { kind: 'variable', variable: 'guardSuspicion', operator: 'lte', required: 1, actual: 1 },
+        met: true,
+      },
+      {
+        requirement: { kind: 'variable', variable: 'routeKnowledge', operator: 'gte', required: 1, actual: 1 },
         met: true,
       },
     ]);

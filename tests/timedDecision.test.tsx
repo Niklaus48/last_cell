@@ -190,7 +190,9 @@ describe('timeout semantics', () => {
     expect(session.result.current.timedDecision?.durationMs).toBe(8000);
 
     session.advance(8000);
-    expect(session.state().currentSceneId).toBe(CHAPTER1_SCENE.guardPass);
+    // The default is the cautious freeze, which is a *transition* (never a
+    // failure); in this chapter it leads into the guard's search scene.
+    expect(session.state().currentSceneId).toBe(CHAPTER1_SCENE.guardSearch);
     expect(engine.getTakenChoiceIds(session.state())).toContain('freeze-and-observe');
   });
 
@@ -434,7 +436,7 @@ describe('the running countdown does not disturb the scene', () => {
     openChoices();
 
     const heading = screen.getByRole('heading', { name: /کسی که نام واقعی‌ات را می‌داند/ });
-    const paragraph = screen.getByText(/صدایی از پشت در سلول می‌آید/);
+    const paragraph = screen.getByText(/صدای قدمی پشت در می‌ایستد/);
     const sceneStep = document.querySelector('.game-topbar__step');
     expect(sceneStep).not.toBeNull();
 
@@ -444,7 +446,7 @@ describe('the running countdown does not disturb the scene', () => {
 
     // Same DOM nodes: no remount, no replay, no scene reset.
     expect(screen.getByRole('heading', { name: /کسی که نام واقعی‌ات را می‌داند/ })).toBe(heading);
-    expect(screen.getByText(/صدایی از پشت در سلول می‌آید/)).toBe(paragraph);
+    expect(screen.getByText(/صدای قدمی پشت در می‌ایستد/)).toBe(paragraph);
     expect(document.querySelector('.game-topbar__step')).toBe(sceneStep);
     expect(screen.getByText(/زمان تصمیم: ۸ ثانیه/)).not.toBeNull();
   });

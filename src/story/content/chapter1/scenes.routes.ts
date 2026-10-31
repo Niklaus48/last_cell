@@ -1,32 +1,52 @@
 /**
- * Chapter 1 — Act IV (two routes) and Act V (the corridor and the locked door).
+ * Chapter 1 — Act II: the corridor, the office, the service route and the
+ * steel door.
  *
- * Route A (the warden's office) carries more risk and yields paperwork; Route B
- * (cafeteria and service corridor) looks safer and yields timetable knowledge.
- * The two routes give different information, then converge at `ch1-corridor-mid`
- * with the state they produced still attached.
+ * This is where state actually bites. Suspicion decides whether a passing torch
+ * simply moves on or stops; composure decides whether Kian can wait a scene out;
+ * route knowledge decides whether the map he spent six months memorising is the
+ * only way through; and plan integrity decides how many retreats are left.
  */
 import type { SceneDefinition } from '../../engine';
-import { CHAPTER1_CLUE, CHAPTER1_FAILURE, CHAPTER1_SCENE as S } from './ids';
+import { CHAPTER1_CLUE as C, CHAPTER1_FAILURE, CHAPTER1_SCENE as S } from './ids';
 
 export const routeScenes: readonly SceneDefinition[] = [
-  // ------------------------------------------------- Route A: the office ---
+  {
+    id: S.corridorFirst,
+    title: 'گوشهٔ امن راهرو',
+    backgroundAssetId: 'corridor',
+    narration: [
+      'کف راهرو از سلول سردتر است. کیان پشت ستون ترک‌خورده می‌ایستد و گوش می‌دهد. دوربین قدیمی بالای سرش از کار افتاده، اما می‌داند نبودن نور قرمز همیشه به معنی خاموش بودن دستگاه نیست.',
+      'سمت چپ نور زردی از دفتر نگهبانی بیرون می‌ریزد. سمت راست مسیر خدمه به غذاخوری و انبار می‌رسد. راه چپ شاید اطلاعاتی داشته باشد که به دردش بخورد؛ راه راست به نقشهٔ اصلی نزدیک‌تر است. برای اولین بار پس از شش ماه، خودش باید بدون امکان تمرین انتخاب کند.',
+    ],
+    choices: [
+      {
+        id: 'take-the-office-way',
+        label: 'سمت چپ؛ به سمت دفتر نگهبانی می‌روم.',
+        outcome: { type: 'transition', targetSceneId: S.officeEntry },
+      },
+      {
+        id: 'take-the-service-way',
+        label: 'سمت راست؛ از راهروی خدمه می‌روم.',
+        outcome: { type: 'transition', targetSceneId: S.cafeteria },
+      },
+    ],
+  },
+
   {
     id: S.officeEntry,
     title: 'زیر درِ دفتر نگهبانی',
     backgroundAssetId: 'office',
     narration: [
-      'زیر درِ دفتر، نور زردی از لای چارچوب بیرون می‌زند. دو مرد داخل‌اند و صدایشان پایین است، اما نه پایین‌تر از آنکه از پشت در شنیده نشود.',
-      'یکی می‌گوید که فهرست امشب یک نام کم دارد و دفتر انتقال نباید دستکاری شود. دیگری جواب می‌دهد: «ننویسش. اگر پرسیدند، می‌گوییم از اول نبوده.» بعد صدای کشیده‌شدن صندلی می‌آید و مکالمه همان‌جا نصفه می‌ماند؛ حرفی که ادامه‌اش هرگز گفته نمی‌شود.',
-      'در این فاصله می‌توانی بایستی و بیشتر بشنوی، یا از کنار در بگذری و به میزِ خالی و دفترهای رویش برسی.',
+      'دو نفر پشت در دفتر با صدای پایین دربارهٔ فهرست انتقال بحث می‌کنند. از لابه‌لای جمله‌های بریده، کیان می‌فهمد نامی از فهرست حذف شده و یکی از آن‌ها ترجیح می‌دهد این حذف اصلاً ثبت نشود.',
+      'صدای کشیده شدن صندلی روی زمین، او را به دیوار می‌چسباند. اگر بیشتر بماند ممکن است چیزی بفهمد، اما اگر در باز شود جایی برای پنهان شدن ندارد.',
     ],
     choices: [
       {
         id: 'listen-at-the-door',
         label: 'می‌ایستم و تا آخرین کلمه گوش می‌دهم.',
-        outcome: { type: 'transition', targetSceneId: S.officeDesk },
+        outcome: { type: 'transition', targetSceneId: S.officeOverheard },
         effects: [
-          { kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 },
           { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
         ],
       },
@@ -34,63 +54,93 @@ export const routeScenes: readonly SceneDefinition[] = [
         id: 'slip-past-the-door',
         label: 'بی‌صدا از کنار در می‌گذرم.',
         outcome: { type: 'transition', targetSceneId: S.officeDesk },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
+
+  {
+    id: S.officeOverheard,
+    title: 'دو نگهبان پشت دیوار',
+    backgroundAssetId: 'office',
+    narration: [
+      'کیان از پشت در می‌فهمد که قرار است دفتر انتقال دوباره بررسی شود. یکی از نگهبان‌ها دربارهٔ نامی حرف می‌زند که در فهرست امشب نیست؛ دیگری مدام به ساعت نگاه می‌کند.',
+      'صدای کناررفتن صندلی به گوش می‌رسد. اگر کیان همین حالا وارد شود، ممکن است درست با یکی از آن دو روبه‌رو شود. عقب کشیدن هم یعنی از دست دادن فرصت دیدن دفتر.',
+    ],
+    choices: [
+      {
+        id: 'wait-for-office-clear',
+        label: 'تا آرام‌شدن دفتر صبر کند.',
+        outcome: { type: 'transition', targetSceneId: S.officeDesk },
+        condition: { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 3 },
+        effects: [
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: -1 },
+        ],
+      },
+      {
+        id: 'risk-office-entry',
+        label: 'با پذیرفتن خطر وارد شود.',
+        outcome: { type: 'transition', targetSceneId: S.officeDesk },
+        effects: [
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
+        ],
+      },
+    ],
+  },
+
   {
     id: S.officeDesk,
     title: 'میزِ خالی',
     backgroundAssetId: 'office',
     narration: [
-      'اتاق کوچک است و بوی کاغذ کهنه و چای سرد دارد. روی میز، دفتر انتقال باز مانده و کنارش پوشه‌ای است که برچسب طبقه‌بندی ندارد — چیزی که در این ساختمان یعنی صاحبش نمی‌خواسته جایی ثبت شود.',
-      'دفتر انتقال سنگین است: ده‌ها سطر با تاریخ و شمارهٔ ارجاع و نامِ مقصد. اگر به هر سطری دست بزنی، جای انگشت روی کاغذ می‌ماند. چراغ دفتر هم روشن است، یعنی تا نیم‌ساعت دیگر یک نفر برمی‌گردد.',
+      'اتاق بوی چای مانده و کاغذ نم‌کشیده می‌دهد. دفتر انتقال روی میز باز است و کنار آن پوشه‌ای بی‌برچسب دیده می‌شود. کیان پشت در چند لحظه منتظر می‌ماند تا مطمئن شود کسی برنمی‌گردد.',
+      'روی دفتر ردیف‌های نام، تاریخ و مقصد دیده می‌شود. بررسی آن زمان می‌برد و هر صفحهٔ جابه‌جا‌شده ممکن است بعداً سؤال درست کند. او هنوز می‌تواند بی‌سروصدا از این اتاق بگذرد.',
     ],
     choices: [
       {
         id: 'read-the-transfer-ledger',
         label: 'دفتر انتقال را ورق می‌زنم.',
         outcome: { type: 'transition', targetSceneId: S.officeLedger },
-        effects: [{ kind: 'discoverClue', clueId: CHAPTER1_CLUE.officeRecordDiscrepancy }],
+        effects: [
+          { kind: 'discoverClue', clueId: C.officeRecordDiscrepancy },
+        ],
       },
       {
         id: 'memorize-the-room-and-go',
         label: 'فقط چیدمان اتاق را به خاطر می‌سپرم و بیرون می‌روم.',
         outcome: { type: 'transition', targetSceneId: S.corridorMid },
-        effects: [{ kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 },
+        ],
       },
     ],
   },
+
   {
     id: S.officeLedger,
     title: 'سطری که نام ندارد',
     backgroundAssetId: 'office',
     narration: [
-      'در یکی از صفحه‌های میانی، میان دو سطر مرتبِ ثبت، سطری هست که در آن نام مقصد خالی مانده است. تاریخش ۱۴ مهر است و کنارش، به‌جای نام، شمارهٔ ارجاع نوشته شده: ۴۱۷-ب.',
-      'اگر این شماره را جایی دیده باشی، حالا معنا پیدا می‌کند؛ اگر ندیده باشی، فقط یک عدد است که در سطر اشتباهی نشسته. بالای صفحه هم با مداد، در حاشیه، جابه‌جایی یک روزه در تاریخ گردش شیفت علامت خورده — تغییری کوچک در روالی که کسی نباید تغییرش می‌داد.',
-      'لای پوشهٔ بی‌برچسب هم برگه‌ای هست. برداشتنش کار یک ثانیه است و پیامدش کار یک شب.',
+      'میان سطرهای مرتب دفتر، یک جای خالی توجه کیان را جلب می‌کند. در تاریخ چهاردهم مهر، نام مقصد ثبت نشده و تنها شمارهٔ ۴۱۷-ب باقی مانده است. کنار آن، حاشیه‌ای مدادی از جابه‌جایی برنامهٔ شیفت خبر می‌دهد.',
+      'اگر کیان یادداشت سلول را دیده باشد، شماره آشناست. در غیر این صورت، فعلاً فقط ثبت ناقصی است که به بقیهٔ سطرها شباهت ندارد. پوشهٔ بی‌برچسب همچنان کنار دست اوست؛ برداشتن یکی از برگه‌هایش آسان است، پنهان ماندن این کار نه.',
     ],
     choices: [
       {
         id: 'compare-with-a-number-you-know',
         label: 'شمارهٔ ارجاع را با شماره‌ای که می‌شناسم مقایسه می‌کنم.',
+        outcome: { type: 'transition', targetSceneId: S.contradictionOffice },
         condition: {
           kind: 'all',
           conditions: [
-            { kind: 'clueDiscovered', clueId: CHAPTER1_CLUE.officeRecordDiscrepancy },
-            {
-              kind: 'any',
-              conditions: [
-                { kind: 'clueDiscovered', clueId: CHAPTER1_CLUE.datedNote },
-                { kind: 'clueDiscovered', clueId: CHAPTER1_CLUE.scheduleReference },
-              ],
-            },
+            { kind: 'clueDiscovered', clueId: C.officeRecordDiscrepancy },
+            { kind: 'clueDiscovered', clueId: C.datedNote },
           ],
         },
-        outcome: { type: 'transition', targetSceneId: S.contradictionOffice },
         effects: [
           { kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 },
-          { kind: 'discoverClue', clueId: CHAPTER1_CLUE.deathRecordContradiction },
+          { kind: 'discoverClue', clueId: C.deathRecordContradiction },
         ],
       },
       {
@@ -106,44 +156,48 @@ export const routeScenes: readonly SceneDefinition[] = [
         id: 'close-the-folder',
         label: 'پوشه را می‌بندم و بیرون می‌روم.',
         outcome: { type: 'transition', targetSceneId: S.corridorMid },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
+
   {
     id: S.contradictionOffice,
     title: 'دو تاریخی که با هم نمی‌خوانند',
     backgroundAssetId: 'office',
     narration: [
-      'شماره را دنبال می‌کنی و به پروندهٔ قدیمی‌تری می‌رسی که در قفسهٔ پایین، لای پرونده‌های باطله مانده است. گزارش مرگ، در دوازدهم مهر امضا شده. سطر انتقال همان شمارهٔ ارجاع، چهاردهم مهر ثبت شده.',
-      'یعنی روی کاغذ، کسی دو روز پیش از آنکه منتقل شود مرده است. این تناقض ثابت نمی‌کند که او زنده است؛ فقط ثابت می‌کند که یکی از این دو تاریخ نباید آنجا باشد. و در این ساختمان، تاریخِ اشتباه یعنی کسی آن را نوشته.',
-      'در حاشیهٔ گزارش، جای امضا هست و زیرش یک حرف مانده که با جوهر پاک‌شده ناخوانا شده است. کسی نمی‌خواسته امضا خوانده شود.',
+      'کیان شمارهٔ ارجاع را تا قفسهٔ پرونده‌های قدیمی دنبال می‌کند. گزارشی با همان شماره پیدا می‌شود: تاریخ مرگ، دوازدهم مهر؛ ثبت انتقال، چهاردهم مهر. در این ترتیب، کسی ظاهراً دو روز بعد از مرگش منتقل شده است.',
+      'او وسوسه می‌شود نتیجه بگیرد که مرگ ساختگی بوده، اما خودش را نگه می‌دارد. یک اشتباه اداری هم می‌تواند همین ظاهر را بسازد. با این حال، اثر پاک‌کردن امضای پایین گزارش معمولی نیست. کسی برای ناخوانا شدنش زحمت کشیده است.',
     ],
     choices: [
       {
         id: 'study-the-erased-signature',
         label: 'جای امضای پاک‌شده را با دقت نگاه می‌کنم.',
         outcome: { type: 'transition', targetSceneId: S.corridorMid },
-        effects: [{ kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 },
+        ],
       },
       {
         id: 'close-it-and-move',
         label: 'پرونده را می‌بندم و برمی‌گردم به راهرو.',
         outcome: { type: 'transition', targetSceneId: S.corridorMid },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
 
-  // -------------------------------------- Route B: cafeteria & service way ---
   {
     id: S.cafeteria,
     title: 'غذاخوری خالی',
     backgroundAssetId: 'cafeteria',
     narration: [
-      'غذاخوری در این ساعت خالی است و صندلی‌های فلزی، مثل دندانی که کنده شده باشد، ردیف ایستاده‌اند. روی دیوار، تابلوی برنامهٔ هفتگی آویزان است و کنارش با گچ، ساعت‌ها را دستکاری کرده‌اند: یکی از شیفت‌های شام پاک شده و با عددی دیگر جای گرفته.',
-      'در حاشیهٔ همان تابلو، با گچ نازک، شماره‌ای نوشته شده که به برنامهٔ رسمی تعلق ندارد و فقط از همین زاویه خوانده می‌شود: ۹۲۰-۴.',
-      'از اینجا راهروی خدمه شروع می‌شود. اگر بایستی و تابلو را بخوانی، چند ثانیه دستت را می‌بندی؛ اگر رد شوی، دستت باز است و ذهنت سبک‌تر — و شاید چیزی را از دست داده باشی.',
+      'غذاخوری خالی است. روی میزها لکه‌های خشک‌شده مانده و یکی از صندلی‌ها کج زیر میز گیر کرده است. کیان از کنار پنجرهٔ مات عبور می‌کند تا از راهرو دیده نشود.',
+      'برنامهٔ هفتگی روی دیوار چند بار پاک و دوباره نوشته شده. کنار یکی از ساعت‌ها شمارهٔ ۹۲۰-۴ به چشم می‌خورد؛ عددی که به فهرست وعده‌های غذایی شباهت ندارد. شاید سرنخ باشد، شاید یادداشت یکی از کارگرها. برای بررسی آن باید چند ثانیه در روشن‌ترین نقطهٔ اتاق بایستد.',
     ],
     choices: [
       {
@@ -151,7 +205,7 @@ export const routeScenes: readonly SceneDefinition[] = [
         label: 'می‌ایستم و برنامهٔ دستکاری‌شده را می‌خوانم.',
         outcome: { type: 'transition', targetSceneId: S.serviceEntry },
         effects: [
-          { kind: 'discoverClue', clueId: CHAPTER1_CLUE.scheduleReference },
+          { kind: 'discoverClue', clueId: C.scheduleReference },
           { kind: 'incrementVariable', variable: 'routeKnowledge', amount: 1 },
         ],
       },
@@ -159,17 +213,20 @@ export const routeScenes: readonly SceneDefinition[] = [
         id: 'cross-to-the-service-door',
         label: 'رد می‌شوم و به راهروی خدمه می‌رسم.',
         outcome: { type: 'transition', targetSceneId: S.serviceEntry },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
+
   {
     id: S.serviceEntry,
     title: 'راهروی خدمه',
     backgroundAssetId: 'service-corridor',
     narration: [
-      'راهروی خدمه باریک‌تر از آن است که فکرش را می‌کردی و دیوارهایش تا نیمه سیمانی است. کف راهرو خیس است و یک خط آب، از سمت انبار تا پیچ راهرو، کشیده شده؛ چرخ‌های یک ترولی که همین چند دقیقه پیش از اینجا گذشته است.',
-      'چرخ‌ها هنوز سرد نشده‌اند. اما در برنامهٔ رسمی، هیچ ترولی در این ساعت از این راهرو نمی‌گذرد؛ برنامه می‌گوید این مسیر تا پنج و نیم خالی است.',
+      'بوی شوینده و رطوبت از راهروی خدمه بالا می‌آید. روی کف، رد باریک چرخ‌هایی مانده که از سمت انبار گذشته‌اند. رد تازه است؛ آب در شیار میان کاشی‌ها هنوز جمع نشده.',
+      'طبق برنامه‌ای که کیان از حفظ است، تا پنج و نیم نباید کسی این مسیر را طی کند. حضور یک ترولی در این ساعت می‌تواند تصادفی باشد، اما برای کسی که فرارش به خلوت راهرو وابسته است، اتفاق کوچکی نیست.',
     ],
     choices: [
       {
@@ -188,13 +245,14 @@ export const routeScenes: readonly SceneDefinition[] = [
       },
     ],
   },
+
   {
     id: S.serviceTrolley,
     title: 'ترولیِ خالی',
     backgroundAssetId: 'service-corridor',
     narration: [
-      'رد را تا پیچ راهرو دنبال می‌کنی. ترولی خالی گوشهٔ دیوار پارک شده و رویش یک ملافهٔ تاشده مانده. کسی که آن را هل داده، عجله داشته و بعد ناگهان کارش را رها کرده — یا صدایی شنیده، یا کسی را دیده.',
-      'این ترولی می‌تواند کار یک خدمتکار باشد که شیفتش را جابه‌جا کرده، یا می‌تواند نشانهٔ چیزی باشد که در برنامه نیست. فرقش را نمی‌دانی، و ادامه دادن یعنی وقت گذاشتن روی چیزی که شاید هیچ باشد.',
+      'ترولی در پیچ راهرو رها شده است. یک ملحفهٔ تمیز روی دسته‌اش افتاده و یکی از چرخ‌ها هنوز روی لکهٔ آب ایستاده. کیان به انتهای مسیر نگاه می‌کند، اما کسی آنجا نیست.',
+      'چیزی در این تصویر جور درنمی‌آید. کسی که ترولی را آورده یا مجبور شده ناگهان برگردد، یا نمی‌خواسته با آن جلوتر برود. ادامه دادن شاید اطلاعات بیشتری بدهد و شاید فقط کیان را از زمان‌بندی خودش عقب بیندازد.',
     ],
     choices: [
       {
@@ -210,69 +268,76 @@ export const routeScenes: readonly SceneDefinition[] = [
         id: 'back-off-now',
         label: 'برمی‌گردم و مسیر خودم را می‌روم.',
         outcome: { type: 'transition', targetSceneId: S.corridorMid },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
 
-  // --------------------------------------------------- Act V: the threshold ---
   {
     id: S.corridorMid,
     title: 'چند قدم مانده به در',
     backgroundAssetId: 'door',
     narration: [
-      'اینجا راهروی خدمه به دهلیز باریکی می‌رسد که یک سرش درِ فولادی انبار است. بوی روغن و گرد آهن دارد. این همان جایی است که در نقشه، همه‌چیز باید در آن جفت شود: در، شیفت، و هفده دقیقه‌ای که هیچ‌کس در راهرو نیست.',
-      'کنار چارچوب در، روی گچ دیوار، چیزی حکاکی شده: دو حرف لاتین، K. F. خط‌ها قدیمی و لبه‌هایشان گرد شده، انگار سال‌ها پیش با تیغهٔ ساعت یا سوزن کنده شده باشند. هیچ توضیحی برایشان نیست؛ نه در نقشهٔ تو، نه در چیزی که تا حالا دیده‌ای.',
-      'به هر حال، دو حرف می‌تواند حرف اول دو اسم باشد، یا دو حرف بی‌معنی از کسی که حوصلهٔ کشیدن یک نشانه را نداشته.',
+      'دهلیز جلوی در فولادی ساکت است. کیان این نقطه را روی نقشه با یک خط قرمز مشخص کرده بود؛ جایی که اگر دیر برسد، همهٔ مسیر بی‌فایده می‌شود.',
+      'کنار چارچوب، روی گچ ترک‌خورده دو حرف لاتین حک شده: K. F. لبهٔ خراش‌ها صاف شده و پیداست نوشته تازه نیست. حروف می‌توانند تصادفی باشند، اما دیدن حروف اول نام خودش در این نقطه باعث می‌شود برای لحظه‌ای حرکتش را فراموش کند.',
     ],
     choices: [
       {
         id: 'look-at-the-scratches',
         label: 'کنار دیوار می‌ایستم و حروف را از نزدیک نگاه می‌کنم.',
         outcome: { type: 'transition', targetSceneId: S.lockedDoor },
-        effects: [{ kind: 'discoverClue', clueId: CHAPTER1_CLUE.corridorInitials }],
+        effects: [
+          { kind: 'discoverClue', clueId: C.corridorInitials },
+        ],
       },
       {
         id: 'straight-to-the-door',
         label: 'نگاه نمی‌کنم و مستقیم سراغ در می‌روم.',
         outcome: { type: 'transition', targetSceneId: S.lockedDoor },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
     ],
   },
+
   {
     id: S.lockedDoor,
     title: 'درِ فولادی',
     backgroundAssetId: 'door',
     narration: [
-      'قفل، همان قفلی است که شش ماه رویش حساب کرده‌ای: سه پیچ، زبانه‌ای که با فشار کنار می‌رود، و فرصتی به‌اندازهٔ نیم‌نفس. اما صدایش همیشه یک چیز است: اگر عجله کنی، فلز حرف می‌زند.',
-      'پشت سرت، راهرو همان‌قدر خالی است که باید باشد. اگر امروز چیزی را دستکاری کرده باشی — میله، دفتر، یا صدای بلند — این خلوت بیشتر شبیه فاصله گرفتنِ نگهبان‌ها از چیزی است که در راه است.',
-      'می‌توانی قفل را با همان تکه‌فلز باز کنی، به دنبال راهی جز این در بگردی، یا همین حالا به گوشهٔ امنی که از آن رد شدی برگردی و نقشه را برای زمانی دیگر نگه داری.',
+      'در فولادی همان‌طور است که کیان انتظار داشت: سنگین، زنگ‌زده و با قفلی که زبانه‌اش اندکی لق می‌زند. تکه‌فلزی را که از سلول آورده میان انگشت‌ها جابه‌جا می‌کند.',
+      'چیزی در ساختمان تغییر کرده است؛ صدای ترولی، رفتار نگهبان یا حرف‌های غریبه. با این حال هنوز می‌تواند طبق نقشه پیش برود. راه دیگری هم ممکن است وجود داشته باشد، اگر از مسیرهای فرعی چیزی یاد گرفته باشد. برگشتن نیز ممکن است، اما هر بار عقب‌نشینی از فرصتی که برایش ماه‌ها زحمت کشیده کم می‌کند.',
     ],
     choices: [
       {
         id: 'pick-the-bolt',
         label: 'تکه‌فلز را زیر زبانه می‌برم.',
-        condition: { kind: 'compareVariable', variable: 'planIntegrity', operator: 'gte', value: 1 },
         outcome: { type: 'transition', targetSceneId: S.doorAttempt },
+        condition: { kind: 'compareVariable', variable: 'planIntegrity', operator: 'gte', value: 1 },
       },
       {
         id: 'look-for-another-way',
         label: 'به دنبال راه دیگری می‌گردم.',
-        condition: { kind: 'compareVariable', variable: 'routeKnowledge', operator: 'gte', value: 1 },
         outcome: { type: 'transition', targetSceneId: S.alternativeRoute },
+        condition: { kind: 'compareVariable', variable: 'routeKnowledge', operator: 'gte', value: 2 },
       },
       {
         id: 'fall-back-to-the-safe-corner',
         label: 'به گوشهٔ امن برمی‌گردم و نقشه را عقب می‌اندازم.',
-        condition: { kind: 'compareVariable', variable: 'planIntegrity', operator: 'gte', value: 1 },
         outcome: { type: 'transition', targetSceneId: S.corridorFirst },
-        effects: [{ kind: 'incrementVariable', variable: 'planIntegrity', amount: -1 }],
+        condition: { kind: 'compareVariable', variable: 'planIntegrity', operator: 'gte', value: 1 },
+        effects: [
+          { kind: 'incrementVariable', variable: 'planIntegrity', amount: -1 },
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
+        ],
       },
       {
         id: 'force-the-door',
         label: 'با شانه به در فشار می‌آورم.',
-        outcome: { type: 'transition', targetSceneId: S.doorAttempt },
+        outcome: { type: 'transition', targetSceneId: S.forcedDoorNoise },
         effects: [
           { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 2 },
           { kind: 'incrementVariable', variable: 'planIntegrity', amount: -1 },
@@ -280,67 +345,187 @@ export const routeScenes: readonly SceneDefinition[] = [
       },
     ],
   },
+
   {
     id: S.doorAttempt,
     title: 'صدای قدم‌ها',
     backgroundAssetId: 'door',
-    timedDecision: { durationMs: 8000, defaultChoiceId: 'freeze-and-observe' },
     narration: [
-      'زبانه زیر انگشتت است. یک فشار کوتاه دیگر و در باز می‌شود. همان لحظه، از انتهای راهرو صدای قدم‌هایی می‌آید که آهسته‌تر از ریتم همیشگی است؛ نگهبان شب، با چراغی که نور زردش روی دیوار می‌لغزد.',
-      'اگر حالا دستت را حرکت بدهی، صدای فلز تا انتهای راهرو می‌رود و هیچ در بسته‌ای جلوی آن را نمی‌گیرد. اگر بی‌حرکت بمانی، چراغ از کنارت رد می‌شود و شاید چیزی نبیند. بین این دو، فقط چند ثانیه هست.',
+      'فلز زیر فشار انگشت کیان آرام جابه‌جا می‌شود. فقط یک حرکت دیگر باقی مانده که صدای کفشی از انتهای راهرو بلند می‌شود؛ آرام‌تر از گردش‌های معمول.',
+      'نور چراغ‌قوه روی دیوار می‌لغزد. کیان می‌تواند همان‌جا بی‌حرکت بماند یا خطر کند و کار را تمام کند. در این فاصلهٔ کوتاه، حتی صدای نفس کشیدنش هم به نظرش بلند می‌رسد.',
     ],
+    timedDecision: {
+      durationMs: 8000,
+      defaultChoiceId: 'freeze-and-observe',
+    },
     choices: [
       {
-        id: 'freeze-and-observe',
-        label: 'بی‌حرکت می‌مانم و تماشا می‌کنم.',
+        id: 'freeze-quiet',
+        label: 'بی‌حرکت بماند و اجازه دهد نگهبان بگذرد.',
         outcome: { type: 'transition', targetSceneId: S.guardPass },
+        condition: {
+          kind: 'all',
+          conditions: [
+            { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'lte', value: 1 },
+            { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 2 },
+          ],
+        },
+      },
+      {
+        id: 'freeze-under-watch',
+        label: 'بی‌حرکت بماند، حتی اگر نگهبان مشکوک شده باشد.',
+        outcome: { type: 'transition', targetSceneId: S.guardSearch },
+        condition: { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'gte', value: 2 },
       },
       {
         id: 'press-the-pick',
-        label: 'همین حالا فشار می‌دهم و در را باز می‌کنم.',
+        label: 'همین حالا زبانه را فشار دهد.',
         outcome: { type: 'failure', failureId: CHAPTER1_FAILURE.caughtAtDoor },
-        effects: [{ kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
+          { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
+        ],
       },
       {
         id: 'slide-into-the-alcove',
-        label: 'آرام به سمت فرورفتگی دیوار می‌لغزم.',
-        condition: { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'lte', value: 1 },
+        label: 'به فرورفتگی تاریک دیوار پناه ببرد.',
         outcome: { type: 'transition', targetSceneId: S.guardPass },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        condition: {
+          kind: 'all',
+          conditions: [
+            { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'lte', value: 1 },
+            { kind: 'compareVariable', variable: 'routeKnowledge', operator: 'gte', value: 1 },
+          ],
+        },
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
+      },
+      {
+        id: 'freeze-and-observe',
+        label: 'سر جایش بماند و راه فرار را در ذهن پیدا کند.',
+        outcome: { type: 'transition', targetSceneId: S.guardSearch },
       },
     ],
   },
+
   {
     id: S.guardPass,
     title: 'چراغی که رد می‌شود',
     backgroundAssetId: 'door',
     narration: [
-      'نگهبان چیزی نمی‌بیند. چراغ را روی قفل نمی‌گیرد، کنار در نمی‌ایستد؛ فقط رد می‌شود و صدای قدم‌هایش در پیچ راهرو محو می‌شود. زبانه هنوز نیمه‌باز است.',
-      'اما در این فاصله اتفاقی افتاده که در نقشه نبود: نگهبان از سر راهرو برگشت و به سمت دیگری رفت. یعنی هفده دقیقهٔ تو حالا هفده دقیقه نیست؛ چیزی در ریتم جابه‌جا شده و تو نمی‌دانی چه.',
+      'نگهبان از کنار دهلیز می‌گذرد. نور چراغ‌قوه روی لبهٔ در می‌افتد اما متوقف نمی‌شود. کیان تا ناپدید شدن قدم‌ها حرکت نمی‌کند.',
+      'چند ثانیه بعد متوجه می‌شود مسیر نگهبان با برنامهٔ همیشگی فرق کرده است. به‌جای برگشتن به سر راهرو، به پله‌های پایین رفته. این تغییر می‌تواند فرصتی تازه باشد یا علامت اینکه کسی منتظر اوست. دریچهٔ تعمیرات نزدیک زمین راهی برای ادامه می‌دهد.',
     ],
     choices: [
       {
         id: 'take-the-hatch',
         label: 'از دریچهٔ تعمیرات پایین دیوار می‌گذرم.',
         outcome: { type: 'transition', targetSceneId: S.recordsAlcove },
-        effects: [{ kind: 'incrementVariable', variable: 'composure', amount: 1 }],
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: 1 },
+        ],
       },
       {
         id: 'wait-for-the-next-round',
         label: 'صبر می‌کنم تا گردش بعدی هم بگذرد و بعد حرکت می‌کنم.',
-        condition: { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 2 },
         outcome: { type: 'transition', targetSceneId: S.recordsAlcove },
-        effects: [{ kind: 'incrementVariable', variable: 'guardSuspicion', amount: -1 }],
+        condition: { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 2 },
+        effects: [
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: -1 },
+        ],
       },
     ],
   },
+
+  {
+    id: S.guardSearch,
+    title: 'نور روی دیوار',
+    backgroundAssetId: 'door',
+    narration: [
+      'نگهبان این بار بی‌تفاوت عبور نمی‌کند. نور چراغش روی چارچوب می‌ماند، بعد آهسته روی زمین حرکت می‌کند. کیان برای نخستین بار می‌فهمد که نقشهٔ شش‌ماهه‌اش دیگر تنها چیزی نیست که این راهرو را کنترل می‌کند.',
+      'یک پیچ باریک در سمت چپ هست؛ برای کسی که ساختمان را شناخته، راه فرار محسوب می‌شود. برای بقیه فقط بن‌بستی تاریک است.',
+    ],
+    choices: [
+      {
+        id: 'search-use-route',
+        label: 'با استفاده از شناخت مسیر، از کنار انبار دور بزند.',
+        outcome: { type: 'transition', targetSceneId: S.alternativeRoute },
+        condition: { kind: 'compareVariable', variable: 'routeKnowledge', operator: 'gte', value: 2 },
+        effects: [
+          { kind: 'incrementVariable', variable: 'planIntegrity', amount: -1 },
+        ],
+      },
+      {
+        id: 'search-steady',
+        label: 'با صبر، از دید چراغ دور بماند.',
+        outcome: { type: 'transition', targetSceneId: S.guardPass },
+        condition: {
+          kind: 'all',
+          conditions: [
+            { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 4 },
+            { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'lte', value: 3 },
+          ],
+        },
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: -1 },
+        ],
+      },
+      {
+        id: 'search-caught',
+        label: 'عجولانه از پشت چارچوب حرکت کند.',
+        outcome: { type: 'failure', failureId: CHAPTER1_FAILURE.caughtAtDoor },
+        effects: [
+          { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: S.forcedDoorNoise,
+    title: 'ضربه‌ای در سکوت',
+    backgroundAssetId: 'door',
+    narration: [
+      'کیان شانه‌اش را به فلز می‌کوبد. صدا در دهلیز می‌پیچد و درد تا بازویش می‌رود. قفل تکان خورده، اما در هنوز بسته است.',
+      'در انتهای راهرو، نوری روی دیوار می‌لغزد. این صدا دیگر قابل پس‌گرفتن نیست. تنها فرصت، تصمیمی است که قبل از رسیدن نگهبان می‌گیرد.',
+    ],
+    choices: [
+      {
+        id: 'forced-hide',
+        label: 'از در فاصله بگیرد و در تاریکی پنهان شود.',
+        outcome: { type: 'transition', targetSceneId: S.guardSearch },
+        effects: [
+          { kind: 'incrementVariable', variable: 'composure', amount: -1 },
+        ],
+      },
+      {
+        id: 'forced-retreat',
+        label: 'از راهروی فرعی عقب بکشد.',
+        outcome: { type: 'transition', targetSceneId: S.alternativeRoute },
+        condition: { kind: 'compareVariable', variable: 'routeKnowledge', operator: 'gte', value: 2 },
+        effects: [
+          { kind: 'incrementVariable', variable: 'planIntegrity', amount: -1 },
+        ],
+      },
+      {
+        id: 'forced-press',
+        label: 'با وجود صدا دوباره به در فشار بیاورد.',
+        outcome: { type: 'transition', targetSceneId: S.doorAttempt },
+        effects: [
+          { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
+        ],
+      },
+    ],
+  },
+
   {
     id: S.alternativeRoute,
     title: 'راهی که در نقشه نبود',
     backgroundAssetId: 'service-corridor',
     narration: [
-      'چیزی که در برنامهٔ رسمی نیست، همیشه یک نقطهٔ ضعف است و همیشه یک راه. کانال تهویهٔ زیرزمین که غذاخوری را به اتاق بایگانی قدیم وصل می‌کند، در نقشه‌های بازرسی «بدون کاربرد» علامت خورده — و بی‌کاربردترین راه‌ها بهترین راه‌ها هستند.',
-      'گرد و خاک و تنگی مسیر یعنی چند متری که باید روی شکم طی کنی و دعا کنی کسی سر دیگرش نایستاده باشد. اما اگر برسی، از پشتِ همان درِ فولادی بیرون می‌آیی، بدون آنکه قفلش را لمس کنی.',
+      'کیان با نشانه‌هایی که در راهرو دیده، دریچهٔ قدیمی تهویه را پیدا می‌کند. راهی باریک به بایگانی منتهی می‌شود؛ نه مسیری که در نقشهٔ اولش بوده و نه گذرگاهی بدون خطر.',
+      'باید از میان گردوغبار و تکه‌های فلز عبور کند. این انتخاب بخشی از نقشهٔ اصلی را بی‌استفاده می‌کند، اما او را از دید مستقیم نگهبان دور می‌برد.',
     ],
     choices: [
       {

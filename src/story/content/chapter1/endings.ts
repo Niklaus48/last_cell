@@ -54,7 +54,7 @@ export const chapter1Failures: readonly FailureDefinition[] = [
     id: CHAPTER1_FAILURE.caughtAtDoor,
     title: 'شکست قابل جبران — صدای فلز',
     summary:
-      'دستت حرکت کرد و فلز صدا داد. نگهبان ایستاد، چراغ را چرخاند و به سمت تو آمد. قدم‌ها به آستانهٔ راهروی خدمه رسیدند و بعد تاریکی دوباره سنگین شد.',
+      'فلز با صدایی خشک به چارچوب می‌خورد. نگهبان می‌ایستد، چراغ را برمی‌گرداند و قدم‌هایش نزدیک‌تر می‌شوند. کیان پیش از آنکه دیده شود عقب می‌کشد؛ این تلاش از دست رفته است.',
     kind: 'recoverable',
     recovery: { type: 'checkpoint', checkpointId: CHAPTER1_CHECKPOINT.doorApproach },
   },
@@ -62,7 +62,7 @@ export const chapter1Failures: readonly FailureDefinition[] = [
     id: CHAPTER1_FAILURE.officeAlarm,
     title: 'شکست قابل جبران — دفتر بازرسی‌شده',
     summary:
-      'برگه را تا زدی و در جیبت گذاشتی، و دقایقی بعد صدای دو نگهبان آمد که می‌گویند پروندهٔ دیشب را باید دوباره بشمارند. دفتر ورق می‌خورد؛ بودن تو در آن اتاق دیگر پنهان نمی‌ماند.',
+      'برداشتن برگه بی‌صدا انجام می‌شود، اما جای خالی آن خیلی زود توجه نگهبان‌ها را جلب می‌کند. صدای ورق‌خوردن دفتر و قدم‌های نزدیک‌شونده کیان را مجبور به عقب‌نشینی می‌کند.',
     kind: 'recoverable',
     recovery: { type: 'checkpoint', checkpointId: CHAPTER1_CHECKPOINT.corridorFirst },
   },

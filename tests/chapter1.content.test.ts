@@ -30,13 +30,16 @@ interface ExplorationResult {
  * Canonicalises a variable value for state de-duplication.
  *
  * Sound for this chapter: every condition compares a numeric variable against a
- * threshold inside [-1, 2] (`composure >= 2`, `planIntegrity >= 1`,
- * `guardSuspicion <= 1`, …), so values outside that window are interchangeable.
+ * threshold inside [-2, 5] (`composure >= 4`, `planIntegrity >= 1`,
+ * `guardSuspicion <= 3`, …), so values outside that window are interchangeable
+ * for *every* condition in the story. The upper bound matters: the chapter has
+ * thresholds at 3 and 4, so clamping lower than that would merge states that
+ * really do behave differently.
  * `history` is also left out of the signature, which is only safe because the
  * chapter uses no `visitedScene` conditions (asserted below).
  */
 function canonicalValue(value: unknown): unknown {
-  return typeof value === 'number' ? Math.max(-1, Math.min(2, value)) : value;
+  return typeof value === 'number' ? Math.max(-2, Math.min(5, value)) : value;
 }
 
 /**
@@ -114,11 +117,11 @@ describe('story definition', () => {
     expect(getStory('chapter1')).toBe(chapter1Story);
   });
 
-  it('has 24–32 narrative scenes, each with a unique id', () => {
+  it('has 24–40 narrative scenes, each with a unique id', () => {
     const ids = chapter1Story.scenes.map((scene) => scene.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBeGreaterThanOrEqual(24);
-    expect(ids.length).toBeLessThanOrEqual(32);
+    expect(ids.length).toBeLessThanOrEqual(40);
   });
 
   it('has unique choice ids within every scene', () => {
@@ -194,7 +197,7 @@ describe('graph integrity', () => {
     // The only cycle is the deliberate fall-back to the safe corner, which costs
     // planIntegrity each time and therefore cannot repeat indefinitely.
     expect(exploration.exploredStates).toBeGreaterThan(1_000);
-    expect(exploration.exploredStates).toBeLessThan(200_000);
+    expect(exploration.exploredStates).toBeLessThan(600_000);
   });
 
   it('uses no visitedScene conditions (keeps the exhaustive search sound)', () => {
@@ -275,9 +278,12 @@ describe('narrative rules', () => {
     const noteScene = chapter1Story.scenes.find((scene) => scene.id === CHAPTER1_SCENE.note);
     const text = noteScene?.narration.join(' ') ?? '';
 
-    expect(text).toContain('اگر او را منتقل کردند، گزارش را تغییر نده.');
-    expect(text).toMatch(/۱۴ مهر/);
+    // The note carries the transfer date and the file reference, and nothing
+    // that would claim who wrote it.
+    expect(text).toMatch(/چهاردهم مهر|۱۴ مهر/);
     expect(text).toMatch(/۴۱۷-ب/);
+    expect(text).toContain('انتقال');
+    expect(text).not.toContain('۹۲۰-۴');
   });
 });
 

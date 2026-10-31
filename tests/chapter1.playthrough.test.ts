@@ -75,7 +75,13 @@ function availableChoiceIds(engine: StoryEngine, state: StoryState): string[] {
   return engine.getAvailableChoices(state).map((choice: ChoiceDefinition) => choice.id);
 }
 
-/** A deliberately clue-free run: listen, stay silent, force the door, leave. */
+/**
+ * A deliberately clue-free run: listen, stay silent, take the service corridor,
+ * work the door quietly, then take the hatch the torch leaves open.
+ *
+ * It collects no evidence and never opens a line to the stranger, which is what
+ * makes it the baseline for "you can always just leave".
+ */
 const MINIMAL_PATH = [
   'listen-to-the-corridor',
   'go-back-to-the-bed',
@@ -86,15 +92,19 @@ const MINIMAL_PATH = [
   'cross-to-the-service-door',
   'head-straight-to-the-door',
   'straight-to-the-door',
-  'force-the-door',
+  'pick-the-bolt',
   'freeze-and-observe',
+  'search-steady',
   'take-the-hatch',
   'keep-moving',
   'go-with-the-plan',
   'step-into-the-yard',
 ];
 
-/** Office route: finds the note, reads the ledger, correlates it, then leaves. */
+/**
+ * Office route: finds the note, reads the ledger, correlates it, then takes the
+ * evidence decision at the yard.
+ */
 const OFFICE_EVIDENCE_PATH = [
   'test-the-bar',
   'leave-it',
@@ -104,13 +114,13 @@ const OFFICE_EVIDENCE_PATH = [
   'pull-the-note',
   'fold-it-into-your-sleeve',
   'take-the-office-way',
-  'listen-at-the-door',
+  'slip-past-the-door',
   'read-the-transfer-ledger',
   'compare-with-a-number-you-know',
   'close-it-and-move',
   'look-at-the-scratches',
   'pick-the-bolt',
-  'freeze-and-observe',
+  'freeze-quiet',
   'take-the-hatch',
   'keep-moving',
   'ask-for-evidence-first',
@@ -131,7 +141,7 @@ const SERVICE_EVIDENCE_PATH = [
   'head-straight-to-the-door',
   'look-at-the-scratches',
   'pick-the-bolt',
-  'freeze-and-observe',
+  'freeze-quiet',
   'take-the-hatch',
   'search-the-old-folders',
   'note-the-archive-number',
@@ -139,7 +149,7 @@ const SERVICE_EVIDENCE_PATH = [
   'put-the-two-dates-together',
 ];
 
-/** Office evidence plus an open, trusting line to the stranger. */
+/** Full evidence plus an open, trusting line to the stranger. */
 const CONNECTION_PATH = [
   'listen-to-the-corridor',
   'memorize-the-rhythm',
@@ -149,13 +159,13 @@ const CONNECTION_PATH = [
   'pull-the-note',
   'fold-it-into-your-sleeve',
   'take-the-office-way',
-  'listen-at-the-door',
+  'slip-past-the-door',
   'read-the-transfer-ledger',
   'compare-with-a-number-you-know',
   'close-it-and-move',
   'look-at-the-scratches',
   'pick-the-bolt',
-  'freeze-and-observe',
+  'freeze-quiet',
   'take-the-hatch',
   'answer-the-internal-phone',
   'let-him-explain',
@@ -429,6 +439,7 @@ describe('clue-gated options stay hidden without their evidence', () => {
       'keep-following-the-track',
       'straight-to-the-door',
       'force-the-door',
+      'forced-press',
     ]);
     expect(run.state.currentSceneId).toBe(S.doorAttempt);
     expect(run.state.variables['guardSuspicion']).toBeGreaterThanOrEqual(2);
@@ -505,7 +516,7 @@ describe('endings', () => {
       'memorize-the-room-and-go',
       'look-at-the-scratches',
       'pick-the-bolt',
-      'freeze-and-observe',
+      'freeze-quiet',
       'take-the-hatch',
       'keep-moving',
       'ask-for-evidence-first',
@@ -556,7 +567,7 @@ describe('endings', () => {
       'close-it-and-move',
       'look-at-the-scratches',
       'pick-the-bolt',
-      'freeze-and-observe',
+      'freeze-quiet',
       'take-the-hatch',
       'keep-moving',
     ]);
@@ -566,12 +577,15 @@ describe('endings', () => {
     expect(availableChoiceIds(run.engine, run.state)).not.toContain('ask-him-about-navid');
   });
 
-  it('Ending C is blocked for a player who has the record but distrusts the stranger', () => {
+  it('Ending C is locked for a player with the record but no lean toward the stranger', () => {
+    // Full evidence and enough conversation to ask about Navid — but the phone
+    // line is never answered, so trust stays at zero and the record alone is not
+    // enough to make the accusation land.
     const run = playThrough([
       'test-the-bar',
       'leave-it',
       'ask-who-he-is',
-      'say-nothing-more',
+      'press-for-a-name',
       'search-the-cell-first',
       'pull-the-note',
       'fold-it-into-your-sleeve',
@@ -582,17 +596,15 @@ describe('endings', () => {
       'close-it-and-move',
       'look-at-the-scratches',
       'pick-the-bolt',
-      'freeze-and-observe',
+      'freeze-quiet',
       'take-the-hatch',
-      'answer-the-internal-phone',
-      'demand-something-checkable',
-      'end-the-call-yourself',
+      'keep-moving',
       'ask-him-about-navid',
     ]);
 
     expect(run.state.currentSceneId).toBe(S.endingConnection);
     expect(run.engine.hasClue(run.state, CHAPTER1_CLUE.deathRecordContradiction)).toBe(true);
-    expect(run.state.variables['strangerTrust']).toBeLessThan(1);
+    expect(run.state.variables['strangerTrust']).toBe(0);
     expect(availableChoiceIds(run.engine, run.state)).not.toContain('show-him-the-record');
 
     const thin = run.engine.choose(run.state, 'ask-without-a-paper-in-your-hand');
@@ -619,7 +631,9 @@ describe('endings', () => {
       'head-straight-to-the-door',
       'straight-to-the-door',
       'force-the-door',
+      'forced-press',
       'freeze-and-observe',
+      'search-steady',
       'take-the-hatch',
       'answer-the-internal-phone',
       'let-him-explain',

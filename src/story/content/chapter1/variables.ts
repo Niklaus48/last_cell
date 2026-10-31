@@ -27,7 +27,7 @@ export const chapter1VariableMeta: Readonly<Record<string, VariableMeta>> = {
   },
   strangerContact: {
     label: 'خط باز با غریبه',
-    hint: 'آیا هنوز راهی برای رسیدن صدای او به تو مانده است.',
+    hint: 'تعداد فرصت‌های برقراری ارتباط با غریبه؛ در این فصل مقدار مثبت یعنی امکان تماس برقرار شده است.',
   },
   strangerTrust: {
     label: 'اعتماد به غریبه',
@@ -43,6 +43,6 @@ export const chapter1VariableMeta: Readonly<Record<string, VariableMeta>> = {
   },
   criticalMistakes: {
     label: 'خطاهای پرسروصدا',
-    hint: 'کارهای بی‌احتیاطی که در این شب انجام داده‌ای.',
+    hint: 'تعداد تصمیم‌های بی‌احتیاط و پرصدایی که پیامدشان تا پایان فصل باقی می‌ماند.',
   },
 };

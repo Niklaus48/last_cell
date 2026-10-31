@@ -13,6 +13,8 @@ import type { ClueDefinition, ClueId } from '../../engine';
 
 export const CHAPTER1_SCENE = {
   cellDawn: 'ch1-cell-dawn',
+  /** A last quiet run-through of the plan before touching anything. */
+  cellRehearsal: 'ch1-cell-rehearsal',
   cellBar: 'ch1-cell-bar',
   cellListen: 'ch1-cell-listen',
 
@@ -27,6 +29,8 @@ export const CHAPTER1_SCENE = {
   corridorFirst: 'ch1-corridor-first',
 
   officeEntry: 'ch1-office-entry',
+  /** Two guards behind the door, discussing a name missing from the list. */
+  officeOverheard: 'ch1-office-overheard',
   officeDesk: 'ch1-office-desk',
   officeLedger: 'ch1-office-ledger',
   contradictionOffice: 'ch1-contradiction-office',
@@ -39,10 +43,16 @@ export const CHAPTER1_SCENE = {
   lockedDoor: 'ch1-locked-door',
   doorAttempt: 'ch1-door-attempt',
   guardPass: 'ch1-guard-pass',
+  /** The torch stops: the search that suspicion buys. */
+  guardSearch: 'ch1-guard-search',
+  /** Shouldering the door; the noise is now part of the run. */
+  forcedDoorNoise: 'ch1-forced-door-noise',
   alternativeRoute: 'ch1-alternative-route',
 
   recordsAlcove: 'ch1-records-alcove',
   recordPull: 'ch1-record-pull',
+  /** ۹۲۰-۴ leads to the staff movement sheets, not to the death file. */
+  scheduleFile: 'ch1-schedule-file',
   phone: 'ch1-phone',
   phoneTalk: 'ch1-phone-talk',
 
@@ -124,6 +134,6 @@ export const chapter1Clues: readonly ClueDefinition[] = [
     id: CHAPTER1_CLUE.deathRecordContradiction,
     label: 'تناقض در گزارش مرگ',
     detail:
-      'در پروندهٔ قدیمی، تاریخ امضای گزارش مرگ پس از تاریخ انتقال ثبت شده است؛ دو تاریخ که نمی‌توانند هر دو درست باشند.',
+      'گزارش مرگ در ۱۲ مهر امضا شده، اما انتقال همان شخص با ارجاع ۴۱۷-ب در ۱۴ مهر ثبت شده؛ تاریخ‌ها با هم سازگار نیستند.',
   },
 ];
