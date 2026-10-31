@@ -98,10 +98,12 @@
 .screen--game {
   gap: var(--space-4);
   background-color: var(--color-backdrop);
-  /* Anchors the cinematic backdrop layer; clips its camera movement. */
+  /* Anchors the cinematic backdrop layer. Deliberately NOT `overflow: hidden`:
+   * the backdrop clips its own camera movement, and clipping here would turn
+   * this element into a scroll container, which would stop the sticky reading
+   * action from staying on screen while a long scene scrolls. */
   position: relative;
   isolation: isolate;
-  overflow: hidden;
 }
 
 .game-topbar {

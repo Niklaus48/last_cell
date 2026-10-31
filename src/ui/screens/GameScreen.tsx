@@ -8,7 +8,7 @@ import type { StoryEngineError } from '../../story/engine';
 import type { SceneViewModel } from '../../story/state/sceneView';
 import type { ScenePresentation } from '../../presentation';
 import { SceneBackdrop } from '../scene/SceneBackdrop';
-import { NarrationGate } from '../components/NarrationGate';
+import { ChoiceAnnouncement, NarrationGate } from '../components/NarrationGate';
 import type { NarrationFlowState } from '../../app/useNarrationFlow';
 import type { ActiveTimedDecision } from '../../app/useTimedDecision';
 import type { SaveFeedback } from '../../app/useStorySession';
@@ -150,13 +150,11 @@ export function GameScreen({
           exists yet. The engine additionally refuses any choice while the gate
           is closed.
         */}
-        {flow.canContinue && (
-          <NarrationGate
-            phase={flow.phase}
-            announcement={flow.announcement}
-            onContinue={flow.continue}
-          />
+        {flow.canContinue && flow.announcement !== null && (
+          <ChoiceAnnouncement announcement={flow.announcement} />
         )}
+
+        {flow.canContinue && <NarrationGate phase={flow.phase} onContinue={flow.continue} />}
 
         {/* Decision stage: rendered only now, which is when the clock may start. */}
         {flow.choicesEnabled && timedDecision !== null && (

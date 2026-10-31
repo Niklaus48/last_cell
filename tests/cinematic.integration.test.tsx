@@ -134,7 +134,9 @@ describe('presentation on the real screen', () => {
     // Two clicks, two scenes — no duplicated transitions from the transitions.
     expect(screen.getByRole('heading', { name: /کسی که نام واقعی‌ات را می‌داند/ })).not.toBeNull();
     expect(before).not.toBe(stepText());
-    expect(screen.getByText(/صحنهٔ ۵/)).not.toBeNull();
+    // Position on the path counts transitions, not history entries (the engine
+    // stores two entries per scene), so the second scene reads as «صحنهٔ ۳».
+    expect(screen.getByText(/صحنهٔ ۳/)).not.toBeNull();
   });
 
   it('keeps the timed decision working with presentation enabled (default fires once)', () => {

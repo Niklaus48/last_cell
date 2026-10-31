@@ -6,7 +6,7 @@
  * carries no visual styling: artwork, camera and overlays belong to
  * `src/presentation/`, so the story layer stays free of CSS concerns.
  */
-import { deriveVisitedSceneIds } from '../engine';
+import { deriveSceneTransitions, deriveVisitedSceneIds } from '../engine';
 import type {
   ChoiceDefinition,
   EndingDefinition,
@@ -19,7 +19,14 @@ import type {
 export interface SceneViewModel {
   readonly scene: SceneDefinition;
   readonly choices: readonly ChoiceDefinition[];
-  /** 1-based position of the current scene on the player's path. */
+  /**
+   * 1-based position of the current scene on the player's path: the first scene
+   * is 1, and every scene the player actually moved to adds one.
+   *
+   * This counts *transitions*, not history entries: the engine records two
+   * entries per scene (arrival + chosen option), so `history.length` used to make
+   * the counter jump 1 → 3 → 5 and read like a bug.
+   */
   readonly step: number;
 }
 
@@ -33,7 +40,7 @@ export function toSceneViewModel(
   return {
     scene,
     choices,
-    step: history.length,
+    step: deriveSceneTransitions(history).length + 1,
   };
 }
 
