@@ -19,6 +19,7 @@ import {
   buildTree,
   createDraft,
   draftFromPack,
+  draftToFullPack,
   draftToPack,
   importPackJson,
   moveNarrationParagraph,
@@ -211,12 +212,23 @@ export function StudioApp(): React.ReactElement {
     setSave({ kind: 'idle' });
   };
 
-  const exportJson = (): void => {
-    const blob = new Blob([JSON.stringify(pack, null, 2)], { type: 'application/json' });
+  /**
+   * Two exports, because they answer two different questions.
+   *
+   * - «خروجی JSON» is the file the game installs: when the story is still the
+   *   canonical chapter it is written as `"story": null`, which means "use the
+   *   canonical content" — small diff, nothing shadowed.
+   * - «خروجی کامل» spells the story out (initial variables, variable labels,
+   *   every scene, choice, condition and effect), for anyone editing the content
+   *   outside the studio — a translation pass, a review, another tool.
+   */
+  const exportJson = (includeStory: boolean): void => {
+    const data = includeStory ? draftToFullPack(draft) : pack;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'studio.pack.json';
+    anchor.download = includeStory ? 'chapter1.pack.full.json' : 'studio.pack.json';
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -271,8 +283,16 @@ export function StudioApp(): React.ReactElement {
               }}
             />
           </label>
-          <button type="button" className="secondary" onClick={exportJson}>
+          <button type="button" className="secondary" onClick={() => exportJson(false)}>
             خروجی JSON
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => exportJson(true)}
+            title="همان پک، اما با کل داستان درونش: متغیرها، صحنه‌ها، انتخاب‌ها، شرط‌ها و اثرها"
+          >
+            خروجی کامل (با کل داستان)
           </button>
           <button type="button" className="secondary" onClick={reset}>
             بازگشت به نسخهٔ اصلی

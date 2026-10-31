@@ -107,8 +107,25 @@ function isCanonicalStory(story: StoryDefinition): boolean {
 
 export function draftToPack(draft: StudioDraft): ContentPack {
   return {
-    ...EMPTY_PACK,
+    ...draftToFullPack(draft),
     story: isCanonicalStory(draft.story) ? null : draft.story,
+  };
+}
+
+/**
+ * The same pack, but with the story always written out.
+ *
+ * `draftToPack` drops the story when it is still the canonical chapter, which
+ * keeps the saved file small but makes it useless to anything that cannot read
+ * the TypeScript content: a JSON editor, a translation pass, another tool.
+ * This variant spells the story out — `initialVariables`, `variableMeta`, every
+ * scene, choice, condition and effect — and is what the studio's «خروجی کامل»
+ * button and `npm run pack:full` produce.
+ */
+export function draftToFullPack(draft: StudioDraft): ContentPack {
+  return {
+    ...EMPTY_PACK,
+    story: draft.story,
     flow: { readingPauseMs: draft.readingPauseMs },
     presentation: { overrides: draft.presentation, assets: draft.artwork },
     audio: { assets: draft.audioAssets, scenes: draft.sceneAudio },

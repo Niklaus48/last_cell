@@ -7,6 +7,7 @@ import {
   buildTree,
   createDraft,
   draftFromPack,
+  draftToFullPack,
   draftToPack,
   retargetChoice,
   sceneById,
@@ -135,6 +136,34 @@ describe('draft editing', () => {
     // An untouched story is written as `null`, not as a copy of the content, so
     // the pack never shadows later edits to the TypeScript chapter.
     expect(draftToPack(draft).story).toBeNull();
+  });
+
+  it('can write the story out in full for tools that cannot read the TypeScript', () => {
+    const draft = draftFromPack(EMPTY_PACK);
+    const full = draftToFullPack(draft);
+
+    // Same pack, opposite choice about the story: null means "use the canonical
+    // chapter", the full export spells it out — variables and labels included.
+    expect(draftToPack(draft).story).toBeNull();
+    expect(full.story).not.toBeNull();
+    expect(full.story?.scenes).toHaveLength(chapter1Story.scenes.length);
+    expect(Object.keys(full.story?.initialVariables ?? {})).toEqual(
+      Object.keys(chapter1Story.initialVariables ?? {}),
+    );
+    expect(full.story?.variableMeta?.['composure']?.label).toBe('خون‌سردی');
+    // The extras travel with it, so the file is a complete pack, not just a story.
+    expect(full.presentation).toEqual(draftToPack(draft).presentation);
+    expect(validateContentPack(JSON.parse(JSON.stringify(full)) as unknown).ok).toBe(true);
+  });
+
+  it('exports the full story even after an edit that would otherwise be a diff', () => {
+    const draft = createDraft();
+    const scene = chapter1Story.scenes[0];
+    if (scene === undefined) return;
+    const edited = updateScene(draft, scene.id, { title: 'عنوان تازه' });
+
+    expect(draftToPack(edited).story).not.toBeNull();
+    expect(draftToFullPack(edited).story?.scenes[0]?.title).toBe('عنوان تازه');
   });
 
   it('adds and removes a choice and stays valid', () => {

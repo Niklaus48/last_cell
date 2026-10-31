@@ -1,0 +1,1730 @@
+{
+  "formatVersion": 1,
+  "storyKey": "chapter1",
+  "story": {
+    "id": "chapter-1-six-months-of-silence",
+    "title": "فصل اول — شش ماه سکوت",
+    "initialSceneId": "ch1-cell-dawn",
+    "initialVariables": {
+      "composure": 2,
+      "guardSuspicion": 0,
+      "planIntegrity": 3,
+      "strangerContact": 0,
+      "strangerTrust": 0,
+      "strangerKnowledge": 0,
+      "routeKnowledge": 0,
+      "criticalMistakes": 0
+    },
+    "variableMeta": {
+      "composure": {
+        "label": "خون‌سردی",
+        "hint": "چقدر می‌توانی در فشار، آرام و دقیق بمانی."
+      },
+      "guardSuspicion": {
+        "label": "شک نگهبان‌ها",
+        "hint": "چقدر نگهبان‌ها به حرکت‌هایت حساس شده‌اند."
+      },
+      "planIntegrity": {
+        "label": "سالم‌بودن نقشه",
+        "hint": "چقدر از نقشهٔ شش‌ماهه هنوز قابل استفاده است."
+      },
+      "strangerContact": {
+        "label": "خط باز با غریبه",
+        "hint": "آیا هنوز راهی برای رسیدن صدای او به تو مانده است."
+      },
+      "strangerTrust": {
+        "label": "اعتماد به غریبه",
+        "hint": "چقدر به حرف‌های او تن داده‌ای."
+      },
+      "strangerKnowledge": {
+        "label": "آنچه غریبه گفته",
+        "hint": "چقدر از دهان خودش شنیده‌ای — ادعاها هم شمرده می‌شوند."
+      },
+      "routeKnowledge": {
+        "label": "شناخت مسیر",
+        "hint": "چقدر از ساختمان را بیرون از نقشهٔ خودت می‌شناسی."
+      },
+      "criticalMistakes": {
+        "label": "خطاهای پرسروصدا",
+        "hint": "کارهای بی‌احتیاطی که در این شب انجام داده‌ای."
+      }
+    },
+    "clues": [
+      {
+        "id": "dated_note",
+        "label": "یادداشت تاریخ‌دار",
+        "detail": "برگه‌ای تاشده با یک جمله و یک شمارهٔ ارجاع؛ نه امضا دارد، نه نشانی از نویسنده."
+      },
+      {
+        "id": "office_record_discrepancy",
+        "label": "ناهم‌خوانی در دفتر انتقال",
+        "detail": "در دفتر انتقال، سطری خالی مانده که باید نام داشته باشد، و تاریخش با روال عادی نمی‌خواند."
+      },
+      {
+        "id": "schedule_reference",
+        "label": "شمارهٔ ارجاع دوم",
+        "detail": "حاشیهٔ تابلوی برنامهٔ غذاخوری، شماره‌ای دارد که به برنامهٔ رسمی تعلق ندارد."
+      },
+      {
+        "id": "corridor_initials",
+        "label": "حروف K. F.",
+        "detail": "دو حرف حکاکی‌شده کنار درِ فولادی راهروی خدمه؛ قدیمی، اما خوانا."
+      },
+      {
+        "id": "telephone_date_claim",
+        "label": "ادعای تاریخ‌های ناسازگار",
+        "detail": "حرفِ مردِ پشت تلفن: در سوابق انتقال، تاریخ‌ها با هم نمی‌خوانند. این یک ادعاست، نه سند."
+      },
+      {
+        "id": "death_record_contradiction",
+        "label": "تناقض در گزارش مرگ",
+        "detail": "در پروندهٔ قدیمی، تاریخ امضای گزارش مرگ پس از تاریخ انتقال ثبت شده است؛ دو تاریخ که نمی‌توانند هر دو درست باشند."
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "cp-ch1-cell-exit",
+        "sceneId": "ch1-leaving-cell",
+        "label": "آستانهٔ سلول"
+      },
+      {
+        "id": "cp-ch1-corridor-first",
+        "sceneId": "ch1-corridor-first",
+        "label": "گوشهٔ امن راهرو"
+      },
+      {
+        "id": "cp-ch1-door-approach",
+        "sceneId": "ch1-corridor-mid",
+        "label": "چند قدم مانده به در"
+      }
+    ],
+    "failures": [
+      {
+        "id": "f-ch1-caught-at-door",
+        "title": "شکست قابل جبران — صدای فلز",
+        "summary": "دستت حرکت کرد و فلز صدا داد. نگهبان ایستاد، چراغ را چرخاند و به سمت تو آمد. قدم‌ها به آستانهٔ راهروی خدمه رسیدند و بعد تاریکی دوباره سنگین شد.",
+        "kind": "recoverable",
+        "recovery": {
+          "type": "checkpoint",
+          "checkpointId": "cp-ch1-door-approach"
+        }
+      },
+      {
+        "id": "f-ch1-office-alarm",
+        "title": "شکست قابل جبران — دفتر بازرسی‌شده",
+        "summary": "برگه را تا زدی و در جیبت گذاشتی، و دقایقی بعد صدای دو نگهبان آمد که می‌گویند پروندهٔ دیشب را باید دوباره بشمارند. دفتر ورق می‌خورد؛ بودن تو در آن اتاق دیگر پنهان نمی‌ماند.",
+        "kind": "recoverable",
+        "recovery": {
+          "type": "checkpoint",
+          "checkpointId": "cp-ch1-corridor-first"
+        }
+      }
+    ],
+    "scenes": [
+      {
+        "id": "ch1-cell-dawn",
+        "title": "سلول ۱۴ — پیش از چهار و نیم",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "شش ماه است که صدای کلید را در این ساعت حفظ کرده‌ای؛ چهار و ده دقیقهٔ صبح، هر شب یک‌بار. امروز هم مثل همیشه می‌آید، و امروز دیگر مثل همیشه نیست.",
+          "سلول ۱۴ سه قدم عرض دارد و پنج قدم طول. در این شش ماه هر وجبش را اندازه گرفته‌ای، تا جایی که در تاریکی هم می‌دانی کدام آجر کج نشسته است. پشت چشمت هنوز خواب دارد، اما بدن بیدار است: کتف‌ها را کشیده‌ای، نفس را سه بار شمرده‌ای و لبهٔ تکه‌فلزی را زیر بستر یک بار لمس کرده‌ای.",
+          "نقشه ساده است و به همین دلیل شکننده: راهروی خدمه، درِ فولادی کنار انبار، و فاصلهٔ کوتاهی که میان تعویض شیفت و گردش نگهبان باز می‌شود. هر چیزی که تا حالا درست پیش رفته، به این بند بوده که هیچ‌کس از نقشه خبر نداشته باشد.",
+          "تا غروب یا بیرون از آذرخش خواهی بود، یا دیگر فرصتی نخواهد بود. برای این چند دقیقهٔ آخر، تصمیم همیشگی‌ات را بگیر."
+        ],
+        "choices": [
+          {
+            "id": "test-the-bar",
+            "label": "میلهٔ دریچهٔ هوا را دوباره امتحان می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-cell-bar"
+            }
+          },
+          {
+            "id": "listen-to-the-corridor",
+            "label": "بی‌حرکت می‌مانم و به ریتم راهرو گوش می‌دهم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-cell-listen"
+            }
+          },
+          {
+            "id": "rehearse-in-your-head",
+            "label": "نقشه را در ذهن یک بار دیگر مرور می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-cell-bar"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-cell-bar",
+        "title": "میله‌ای که باید ساکت بماند",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "میلهٔ سمت راست دریچهٔ هوا، شش ماه پیش لق بود و حالا لق‌تر است. اگر با فشار یکنواخت و از پایین بلندش کنی، جا می‌افتد بی‌آنکه صدا بدهد. اگر عجله کنی، صدایش تا انتهای راهرو می‌رود و همه‌چیز تمام است.",
+          "کف دستت را زیر میله گذاشته‌ای. فلز سرد است و عرق دستت رویش می‌ماند. یک بار دیگر می‌شود همه‌چیز را بادقت‌تر کرد؛ و یک بار دیگر می‌شود آن را به حال خودش گذاشت."
+        ],
+        "choices": [
+          {
+            "id": "ease-the-bolt",
+            "label": "روغنِ باقی‌مانده را زیر میله می‌برم و جا می‌اندازمش.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-arrives"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "planIntegrity",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "leave-it",
+            "label": "دست نمی‌زنم؛ میله به همین حالا هم کار می‌کند.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-arrives"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-cell-listen",
+        "title": "ریتم راهرو",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "چشم‌ها را می‌بندی و گوش می‌دهی. قدم‌های نگهبان شب از انتهای راهرو می‌آید، می‌ایستد، برمی‌گردد. بین دو گردش، هفده دقیقه فاصله است؛ و در دقیقهٔ نهم، صدای دری در طبقهٔ پایین باز می‌شود که هیچ‌وقت در برنامه نیست.",
+          "این هفده دقیقه، تنها سرمایهٔ واقعی توست. کسی که ریتم را بشناسد، لازم نیست بدود؛ فقط باید در جای درست بایستد."
+        ],
+        "choices": [
+          {
+            "id": "memorize-the-rhythm",
+            "label": "هفده دقیقه و آن درِ بی‌برنامه را به خاطر می‌سپارم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-arrives"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "go-back-to-the-bed",
+            "label": "به تخت برمی‌گردم و ذهنم را خالی می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-arrives"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-stranger-arrives",
+        "title": "کسی که نام واقعی‌ات را می‌داند",
+        "backgroundAssetId": "cell-interior",
+        "timedDecision": {
+          "durationMs": 12000,
+          "defaultChoiceId": "stay-silent"
+        },
+        "narration": [
+          "صدایی از پشت در سلول می‌آید؛ نه از دریچه، از همان درِ بسته. مردی با لحنی آرام و بی‌شتاب، نام واقعی تو را می‌گوید: «کیان فرهمند.»",
+          "در این شش ماه، هیچ‌کس در آذرخش این نام را به زبان نیاورده. همه اینجا تو را با شماره صدا می‌زنند. سایهٔ مرد پشت در می‌ایستد، انگار منتظر جواب نیست؛ منتظر تصمیم است. چند ثانیه سکوت می‌کند و بعد می‌گوید: «بالاخره روزش رسید، کیان.»",
+          "ذهنت همزمان سه راه را می‌بیند و هیچ‌کدام امن نیست: نمی‌دانی او کیست، نمی‌دانی چقدر وقت داری، و نمی‌دانی چه چیزی را باید نشنیده بگیری."
+        ],
+        "choices": [
+          {
+            "id": "stay-silent",
+            "label": "سکوت می‌کنم و هیچ نشانه‌ای نمی‌دهم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-silence"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "ask-who-he-is",
+            "label": "می‌پرسم که او کیست.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-who"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerContact",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "threaten-him",
+            "label": "تهدیدش می‌کنم و توضیح می‌خواهم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-stranger-threat"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "criticalMistakes",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": -1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-silence",
+        "title": "سکوت، و سکوت",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "جواب نمی‌دهی. نه اسمی، نه نفسی، نه تکان سر. فقط به دیوار روبرو نگاه می‌کنی و می‌گذاری ثانیه‌ها از کنارت رد شوند.",
+          "مرد پشت در هم چیزی اضافه نمی‌کند. چند لحظه می‌ماند، انگار در سکوت چیزی را می‌سنجد، و بعد فقط می‌گوید: «باشد.» قدم‌هایش دور می‌شوند و راهرو به همان خالیِ همیشگی برمی‌گردد.",
+          "هیچ نمی‌دانی. نه اسمی شنیدی، نه ادعایی، نه نشانی؛ فقط این را می‌دانی که کسی هست که نام تو را می‌داند و آن را در این ساختمان به زبان آورده. تا وقتی در را باز نکنی، همین اندازه کافی است و همین اندازه هم بی‌فایده."
+        ],
+        "choices": [
+          {
+            "id": "wait-for-the-steps-to-fade",
+            "label": "صبر می‌کنم تا صدای قدم‌ها محو شود.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-leaving-cell"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-stranger-who",
+        "title": "نامی که جواب نمی‌دهد",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "می‌پرسی که او کیست. جواب نمی‌دهد؛ ولی انکار هم نمی‌کند. می‌گوید: «اسم من چیزی را عوض نمی‌کند. مهم این است که تو شب بیست‌ویکم اینجا نبودی — و می‌دانی که نبودی.»",
+          "بیست‌ویکم. هشت سال پیش، شبی که پرونده‌اش در یک جمله بسته شد. کسی که این را می‌داند، یا آن شب آنجا بوده، یا پرونده را خوانده است. هیچ‌کدامش خبر خوبی نیست.",
+          "مرد اضافه می‌کند: «من الان نمی‌خواهم چیزی از تو بگیرم. فقط بدان که اگر امروز قدمی برداری، شمرده‌تر بردار.» بعد صدایش پایین می‌آید، مثل کسی که سرش را برگردانده: «من دوباره سر راهت هستم.»"
+        ],
+        "choices": [
+          {
+            "id": "press-for-a-name",
+            "label": "جلوتر می‌روم و تا نامش را نگوید رهایش نمی‌کنم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "composure",
+              "operator": "gte",
+              "value": 2
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-leaving-cell"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "say-nothing-more",
+            "label": "چیزی نمی‌گویم و می‌گذارم برود.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-leaving-cell"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-stranger-threat",
+        "title": "صدای بلندی که نباید بلند می‌شد",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "به سمت در می‌روی و بلندتر از آنچه باید، می‌گویی که اگر یک کلمهٔ دیگر بشنوی، هرچه هست را سرش می‌آوری. لحنت مثل تهدید است و خودت هم می‌دانی که در این ساختمان، تهدید بی‌سند فقط سروصداست.",
+          "مرد نمی‌ترسد. حتی یک قدم عقب نمی‌رود. فقط می‌گوید: «صدایت را شنیدند. حالا بیشتر از من به تو ضرر زد.»",
+          "در انتهای راهرو، قدم‌هایی می‌ایستد و بعد با تردید ادامه می‌دهد. نگهبان شب پشت همان دیوار است که سال‌ها در برابر هر صدایی سکوت کرده؛ اما امروز یک قدم از ریتمش بیرون زد."
+        ],
+        "choices": [
+          {
+            "id": "lower-your-voice",
+            "label": "صدایم را پایین می‌آورم و به دیوار تکیه می‌دهم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-leaving-cell"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "keep-pressing",
+            "label": "ادامه می‌دهم تا بترسد.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-leaving-cell"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "criticalMistakes",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-leaving-cell",
+        "title": "آستانهٔ سلول",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "دستت روی میلهٔ دریچه است و شمارش در سرت شروع شده: سه نفس، بعد فشار، بعد هیچ صدایی. شش ماه تمرین همین یک حرکت بوده و حالا باید در تاریکی و بی‌تماشاچی انجامش دهی.",
+          "در آستانهٔ در، یک لحظه می‌ایستی. چیزی هست که از دیشب آزارت می‌دهد: مردی نام واقعی تو را می‌دانست و تو حتی صورتش را ندیدی. اگر نقشه درست باشد، همین حالا باید راه بیفتی. اگر نقشه درست نباشد، هر ثانیه‌ای که اینجا بایستی، ثانیه‌ای است که کسی برایش حساب باز کرده."
+        ],
+        "choices": [
+          {
+            "id": "slip-out-now",
+            "label": "بی‌درنگ بیرون می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-first"
+            }
+          },
+          {
+            "id": "search-the-cell-first",
+            "label": "یک بار دیگر گوشه‌های سلول را نگاه می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-cell-search"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-cell-search",
+        "title": "زیر صفحهٔ لق",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "زیر تخت، صفحهٔ سیمانی سمت دیوار لق است؛ شش ماه پیش هم لق بود و تو هرگز زیرش را نگاه نکرده‌ای، چون هیچ‌وقت چیزی برای پنهان‌کردن نداشتی که مال تو نباشد.",
+          "حالا صفحه را کنار می‌زنی. گرد و خاک، یک قوطی خالی، و لای درز، برگه‌ای تاشده که گوشه‌اش زرد شده است. جای انگشت روی تای برگه مانده؛ این برگه یک بار با عجله پنهان شده، نه با دقت."
+        ],
+        "choices": [
+          {
+            "id": "pull-the-note",
+            "label": "برگه را بیرون می‌کشم و باز می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-note"
+            },
+            "effects": [
+              {
+                "kind": "discoverClue",
+                "clueId": "dated_note"
+              }
+            ]
+          },
+          {
+            "id": "leave-it-where-it-is",
+            "label": "دست نمی‌زنم؛ این مال من نیست و وقت ندارم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-first"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-note",
+        "title": "یادداشت ۱۴ مهر",
+        "backgroundAssetId": "cell-interior",
+        "narration": [
+          "برگه دو خط دارد و هر دو خط با خودکار آبی نوشته شده‌اند. خط اول: «اگر او را منتقل کردند، گزارش را تغییر نده.» خط دوم فقط یک شمارهٔ ارجاع است: ۴۱۷-ب. بالای برگه، با همان خودکار، تاریخ خورده: ۱۴ مهر.",
+          "نه سالی روی برگه هست، نه امضایی. «او» می‌تواند هرکسی باشد؛ «گزارش» می‌تواند هر گزارشی. تنها چیزی که این برگه قطعی می‌کند این است که یک نفر، در یک روز مشخص، از انتقال کسی و از تغییر دادن گزارشی می‌نوشته — و آن برگه را زیر صفحهٔ سلول تو پنهان کرده است.",
+          "این برگه هیچ‌کس را زنده نمی‌کند. اما شماره‌ای دارد، و شماره‌ها در ساختمانی که همه‌چیزش پرونده دارد، به جایی می‌رسند."
+        ],
+        "choices": [
+          {
+            "id": "fold-it-into-your-sleeve",
+            "label": "تا می‌کنم و در آستینم پنهانش می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-first"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "memorize-and-leave-it",
+            "label": "شماره را حفظ می‌کنم و برگه را سر جایش می‌گذارم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-first"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-corridor-first",
+        "title": "گوشهٔ امن راهرو",
+        "backgroundAssetId": "corridor",
+        "narration": [
+          "راهرو سردتر از سلول است و بوی گَرد و فلز دارد. در گوشهٔ پشت ستون، جایی که دوربین قدیمی سال‌هاست خاموش است، می‌ایستی و نفس می‌گیری. اینجا نخستین نقطه‌ای است که می‌توانی بگویی از سلول بیرون آمده‌ای.",
+          "دو راه پیش رو داری و هیچ‌کدام بی‌هزینه نیست. سمت چپ، نور زیر درِ دفتر نگهبانی می‌تابد و صدای دو مرد از آن‌سو می‌آید. سمت راست، راهروی خدمه است که غذاخوری و انبار را به هم وصل می‌کند و در این ساعت باید خالی باشد."
+        ],
+        "choices": [
+          {
+            "id": "take-the-office-way",
+            "label": "سمت چپ؛ به سمت دفتر نگهبانی می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-office-entry"
+            }
+          },
+          {
+            "id": "take-the-service-way",
+            "label": "سمت راست؛ از راهروی خدمه می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-cafeteria"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-office-entry",
+        "title": "زیر درِ دفتر نگهبانی",
+        "backgroundAssetId": "office",
+        "narration": [
+          "زیر درِ دفتر، نور زردی از لای چارچوب بیرون می‌زند. دو مرد داخل‌اند و صدایشان پایین است، اما نه پایین‌تر از آنکه از پشت در شنیده نشود.",
+          "یکی می‌گوید که فهرست امشب یک نام کم دارد و دفتر انتقال نباید دستکاری شود. دیگری جواب می‌دهد: «ننویسش. اگر پرسیدند، می‌گوییم از اول نبوده.» بعد صدای کشیده‌شدن صندلی می‌آید و مکالمه همان‌جا نصفه می‌ماند؛ حرفی که ادامه‌اش هرگز گفته نمی‌شود.",
+          "در این فاصله می‌توانی بایستی و بیشتر بشنوی، یا از کنار در بگذری و به میزِ خالی و دفترهای رویش برسی."
+        ],
+        "choices": [
+          {
+            "id": "listen-at-the-door",
+            "label": "می‌ایستم و تا آخرین کلمه گوش می‌دهم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-office-desk"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "slip-past-the-door",
+            "label": "بی‌صدا از کنار در می‌گذرم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-office-desk"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-office-desk",
+        "title": "میزِ خالی",
+        "backgroundAssetId": "office",
+        "narration": [
+          "اتاق کوچک است و بوی کاغذ کهنه و چای سرد دارد. روی میز، دفتر انتقال باز مانده و کنارش پوشه‌ای است که برچسب طبقه‌بندی ندارد — چیزی که در این ساختمان یعنی صاحبش نمی‌خواسته جایی ثبت شود.",
+          "دفتر انتقال سنگین است: ده‌ها سطر با تاریخ و شمارهٔ ارجاع و نامِ مقصد. اگر به هر سطری دست بزنی، جای انگشت روی کاغذ می‌ماند. چراغ دفتر هم روشن است، یعنی تا نیم‌ساعت دیگر یک نفر برمی‌گردد."
+        ],
+        "choices": [
+          {
+            "id": "read-the-transfer-ledger",
+            "label": "دفتر انتقال را ورق می‌زنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-office-ledger"
+            },
+            "effects": [
+              {
+                "kind": "discoverClue",
+                "clueId": "office_record_discrepancy"
+              }
+            ]
+          },
+          {
+            "id": "memorize-the-room-and-go",
+            "label": "فقط چیدمان اتاق را به خاطر می‌سپرم و بیرون می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-office-ledger",
+        "title": "سطری که نام ندارد",
+        "backgroundAssetId": "office",
+        "narration": [
+          "در یکی از صفحه‌های میانی، میان دو سطر مرتبِ ثبت، سطری هست که در آن نام مقصد خالی مانده است. تاریخش ۱۴ مهر است و کنارش، به‌جای نام، شمارهٔ ارجاع نوشته شده: ۴۱۷-ب.",
+          "اگر این شماره را جایی دیده باشی، حالا معنا پیدا می‌کند؛ اگر ندیده باشی، فقط یک عدد است که در سطر اشتباهی نشسته. بالای صفحه هم با مداد، در حاشیه، جابه‌جایی یک روزه در تاریخ گردش شیفت علامت خورده — تغییری کوچک در روالی که کسی نباید تغییرش می‌داد.",
+          "لای پوشهٔ بی‌برچسب هم برگه‌ای هست. برداشتنش کار یک ثانیه است و پیامدش کار یک شب."
+        ],
+        "choices": [
+          {
+            "id": "compare-with-a-number-you-know",
+            "label": "شمارهٔ ارجاع را با شماره‌ای که می‌شناسم مقایسه می‌کنم.",
+            "condition": {
+              "kind": "all",
+              "conditions": [
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "office_record_discrepancy"
+                },
+                {
+                  "kind": "any",
+                  "conditions": [
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "dated_note"
+                    },
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "schedule_reference"
+                    }
+                  ]
+                }
+              ]
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-contradiction-office"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "discoverClue",
+                "clueId": "death_record_contradiction"
+              }
+            ]
+          },
+          {
+            "id": "take-the-loose-page",
+            "label": "برگهٔ داخل پوشه را برمی‌دارم.",
+            "outcome": {
+              "type": "failure",
+              "failureId": "f-ch1-office-alarm"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "criticalMistakes",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "close-the-folder",
+            "label": "پوشه را می‌بندم و بیرون می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-contradiction-office",
+        "title": "دو تاریخی که با هم نمی‌خوانند",
+        "backgroundAssetId": "office",
+        "narration": [
+          "شماره را دنبال می‌کنی و به پروندهٔ قدیمی‌تری می‌رسی که در قفسهٔ پایین، لای پرونده‌های باطله مانده است. گزارش مرگ، در دوازدهم مهر امضا شده. سطر انتقال همان شمارهٔ ارجاع، چهاردهم مهر ثبت شده.",
+          "یعنی روی کاغذ، کسی دو روز پیش از آنکه منتقل شود مرده است. این تناقض ثابت نمی‌کند که او زنده است؛ فقط ثابت می‌کند که یکی از این دو تاریخ نباید آنجا باشد. و در این ساختمان، تاریخِ اشتباه یعنی کسی آن را نوشته.",
+          "در حاشیهٔ گزارش، جای امضا هست و زیرش یک حرف مانده که با جوهر پاک‌شده ناخوانا شده است. کسی نمی‌خواسته امضا خوانده شود."
+        ],
+        "choices": [
+          {
+            "id": "study-the-erased-signature",
+            "label": "جای امضای پاک‌شده را با دقت نگاه می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "close-it-and-move",
+            "label": "پرونده را می‌بندم و برمی‌گردم به راهرو.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-cafeteria",
+        "title": "غذاخوری خالی",
+        "backgroundAssetId": "cafeteria",
+        "narration": [
+          "غذاخوری در این ساعت خالی است و صندلی‌های فلزی، مثل دندانی که کنده شده باشد، ردیف ایستاده‌اند. روی دیوار، تابلوی برنامهٔ هفتگی آویزان است و کنارش با گچ، ساعت‌ها را دستکاری کرده‌اند: یکی از شیفت‌های شام پاک شده و با عددی دیگر جای گرفته.",
+          "در حاشیهٔ همان تابلو، با گچ نازک، شماره‌ای نوشته شده که به برنامهٔ رسمی تعلق ندارد و فقط از همین زاویه خوانده می‌شود: ۹۲۰-۴.",
+          "از اینجا راهروی خدمه شروع می‌شود. اگر بایستی و تابلو را بخوانی، چند ثانیه دستت را می‌بندی؛ اگر رد شوی، دستت باز است و ذهنت سبک‌تر — و شاید چیزی را از دست داده باشی."
+        ],
+        "choices": [
+          {
+            "id": "study-the-board",
+            "label": "می‌ایستم و برنامهٔ دستکاری‌شده را می‌خوانم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-service-entry"
+            },
+            "effects": [
+              {
+                "kind": "discoverClue",
+                "clueId": "schedule_reference"
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "cross-to-the-service-door",
+            "label": "رد می‌شوم و به راهروی خدمه می‌رسم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-service-entry"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-service-entry",
+        "title": "راهروی خدمه",
+        "backgroundAssetId": "service-corridor",
+        "narration": [
+          "راهروی خدمه باریک‌تر از آن است که فکرش را می‌کردی و دیوارهایش تا نیمه سیمانی است. کف راهرو خیس است و یک خط آب، از سمت انبار تا پیچ راهرو، کشیده شده؛ چرخ‌های یک ترولی که همین چند دقیقه پیش از اینجا گذشته است.",
+          "چرخ‌ها هنوز سرد نشده‌اند. اما در برنامهٔ رسمی، هیچ ترولی در این ساعت از این راهرو نمی‌گذرد؛ برنامه می‌گوید این مسیر تا پنج و نیم خالی است."
+        ],
+        "choices": [
+          {
+            "id": "follow-the-wet-track",
+            "label": "رد چرخ‌ها را دنبال می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-service-trolley"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "head-straight-to-the-door",
+            "label": "بی‌اعتنا به سمت درِ فولادی می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-service-trolley",
+        "title": "ترولیِ خالی",
+        "backgroundAssetId": "service-corridor",
+        "narration": [
+          "رد را تا پیچ راهرو دنبال می‌کنی. ترولی خالی گوشهٔ دیوار پارک شده و رویش یک ملافهٔ تاشده مانده. کسی که آن را هل داده، عجله داشته و بعد ناگهان کارش را رها کرده — یا صدایی شنیده، یا کسی را دیده.",
+          "این ترولی می‌تواند کار یک خدمتکار باشد که شیفتش را جابه‌جا کرده، یا می‌تواند نشانهٔ چیزی باشد که در برنامه نیست. فرقش را نمی‌دانی، و ادامه دادن یعنی وقت گذاشتن روی چیزی که شاید هیچ باشد."
+        ],
+        "choices": [
+          {
+            "id": "keep-following-the-track",
+            "label": "ادامه می‌دهم تا ببینم به کجا می‌رسد.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "back-off-now",
+            "label": "برمی‌گردم و مسیر خودم را می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-mid"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-corridor-mid",
+        "title": "چند قدم مانده به در",
+        "backgroundAssetId": "door",
+        "narration": [
+          "اینجا راهروی خدمه به دهلیز باریکی می‌رسد که یک سرش درِ فولادی انبار است. بوی روغن و گرد آهن دارد. این همان جایی است که در نقشه، همه‌چیز باید در آن جفت شود: در، شیفت، و هفده دقیقه‌ای که هیچ‌کس در راهرو نیست.",
+          "کنار چارچوب در، روی گچ دیوار، چیزی حکاکی شده: دو حرف لاتین، K. F. خط‌ها قدیمی و لبه‌هایشان گرد شده، انگار سال‌ها پیش با تیغهٔ ساعت یا سوزن کنده شده باشند. هیچ توضیحی برایشان نیست؛ نه در نقشهٔ تو، نه در چیزی که تا حالا دیده‌ای.",
+          "به هر حال، دو حرف می‌تواند حرف اول دو اسم باشد، یا دو حرف بی‌معنی از کسی که حوصلهٔ کشیدن یک نشانه را نداشته."
+        ],
+        "choices": [
+          {
+            "id": "look-at-the-scratches",
+            "label": "کنار دیوار می‌ایستم و حروف را از نزدیک نگاه می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-locked-door"
+            },
+            "effects": [
+              {
+                "kind": "discoverClue",
+                "clueId": "corridor_initials"
+              }
+            ]
+          },
+          {
+            "id": "straight-to-the-door",
+            "label": "نگاه نمی‌کنم و مستقیم سراغ در می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-locked-door"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-locked-door",
+        "title": "درِ فولادی",
+        "backgroundAssetId": "door",
+        "narration": [
+          "قفل، همان قفلی است که شش ماه رویش حساب کرده‌ای: سه پیچ، زبانه‌ای که با فشار کنار می‌رود، و فرصتی به‌اندازهٔ نیم‌نفس. اما صدایش همیشه یک چیز است: اگر عجله کنی، فلز حرف می‌زند.",
+          "پشت سرت، راهرو همان‌قدر خالی است که باید باشد. اگر امروز چیزی را دستکاری کرده باشی — میله، دفتر، یا صدای بلند — این خلوت بیشتر شبیه فاصله گرفتنِ نگهبان‌ها از چیزی است که در راه است.",
+          "می‌توانی قفل را با همان تکه‌فلز باز کنی، به دنبال راهی جز این در بگردی، یا همین حالا به گوشهٔ امنی که از آن رد شدی برگردی و نقشه را برای زمانی دیگر نگه داری."
+        ],
+        "choices": [
+          {
+            "id": "pick-the-bolt",
+            "label": "تکه‌فلز را زیر زبانه می‌برم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "planIntegrity",
+              "operator": "gte",
+              "value": 1
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-door-attempt"
+            }
+          },
+          {
+            "id": "look-for-another-way",
+            "label": "به دنبال راه دیگری می‌گردم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "routeKnowledge",
+              "operator": "gte",
+              "value": 1
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-alternative-route"
+            }
+          },
+          {
+            "id": "fall-back-to-the-safe-corner",
+            "label": "به گوشهٔ امن برمی‌گردم و نقشه را عقب می‌اندازم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "planIntegrity",
+              "operator": "gte",
+              "value": 1
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-corridor-first"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "planIntegrity",
+                "amount": -1
+              }
+            ]
+          },
+          {
+            "id": "force-the-door",
+            "label": "با شانه به در فشار می‌آورم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-door-attempt"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 2
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "planIntegrity",
+                "amount": -1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-door-attempt",
+        "title": "صدای قدم‌ها",
+        "backgroundAssetId": "door",
+        "timedDecision": {
+          "durationMs": 8000,
+          "defaultChoiceId": "freeze-and-observe"
+        },
+        "narration": [
+          "زبانه زیر انگشتت است. یک فشار کوتاه دیگر و در باز می‌شود. همان لحظه، از انتهای راهرو صدای قدم‌هایی می‌آید که آهسته‌تر از ریتم همیشگی است؛ نگهبان شب، با چراغی که نور زردش روی دیوار می‌لغزد.",
+          "اگر حالا دستت را حرکت بدهی، صدای فلز تا انتهای راهرو می‌رود و هیچ در بسته‌ای جلوی آن را نمی‌گیرد. اگر بی‌حرکت بمانی، چراغ از کنارت رد می‌شود و شاید چیزی نبیند. بین این دو، فقط چند ثانیه هست."
+        ],
+        "choices": [
+          {
+            "id": "freeze-and-observe",
+            "label": "بی‌حرکت می‌مانم و تماشا می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-guard-pass"
+            }
+          },
+          {
+            "id": "press-the-pick",
+            "label": "همین حالا فشار می‌دهم و در را باز می‌کنم.",
+            "outcome": {
+              "type": "failure",
+              "failureId": "f-ch1-caught-at-door"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "slide-into-the-alcove",
+            "label": "آرام به سمت فرورفتگی دیوار می‌لغزم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "guardSuspicion",
+              "operator": "lte",
+              "value": 1
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-guard-pass"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-guard-pass",
+        "title": "چراغی که رد می‌شود",
+        "backgroundAssetId": "door",
+        "narration": [
+          "نگهبان چیزی نمی‌بیند. چراغ را روی قفل نمی‌گیرد، کنار در نمی‌ایستد؛ فقط رد می‌شود و صدای قدم‌هایش در پیچ راهرو محو می‌شود. زبانه هنوز نیمه‌باز است.",
+          "اما در این فاصله اتفاقی افتاده که در نقشه نبود: نگهبان از سر راهرو برگشت و به سمت دیگری رفت. یعنی هفده دقیقهٔ تو حالا هفده دقیقه نیست؛ چیزی در ریتم جابه‌جا شده و تو نمی‌دانی چه."
+        ],
+        "choices": [
+          {
+            "id": "take-the-hatch",
+            "label": "از دریچهٔ تعمیرات پایین دیوار می‌گذرم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-records-alcove"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "wait-for-the-next-round",
+            "label": "صبر می‌کنم تا گردش بعدی هم بگذرد و بعد حرکت می‌کنم.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "composure",
+              "operator": "gte",
+              "value": 2
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-records-alcove"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "guardSuspicion",
+                "amount": -1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-alternative-route",
+        "title": "راهی که در نقشه نبود",
+        "backgroundAssetId": "service-corridor",
+        "narration": [
+          "چیزی که در برنامهٔ رسمی نیست، همیشه یک نقطهٔ ضعف است و همیشه یک راه. کانال تهویهٔ زیرزمین که غذاخوری را به اتاق بایگانی قدیم وصل می‌کند، در نقشه‌های بازرسی «بدون کاربرد» علامت خورده — و بی‌کاربردترین راه‌ها بهترین راه‌ها هستند.",
+          "گرد و خاک و تنگی مسیر یعنی چند متری که باید روی شکم طی کنی و دعا کنی کسی سر دیگرش نایستاده باشد. اما اگر برسی، از پشتِ همان درِ فولادی بیرون می‌آیی، بدون آنکه قفلش را لمس کنی."
+        ],
+        "choices": [
+          {
+            "id": "crawl-through-the-vent",
+            "label": "داخل کانال می‌خزم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-records-alcove"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "planIntegrity",
+                "amount": -1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-records-alcove",
+        "title": "اتاق بایگانی قدیم",
+        "backgroundAssetId": "alcove",
+        "narration": [
+          "پشت دریچه، اتاقی است که سال‌ها کسی مرتبش نکرده: قفسه‌های فلزی تا سقف، پرونده‌هایی که برچسب‌هایشان از بند افتاده، و بوی کاغذ نم‌خورده. اینجا آرشیو زندهٔ ساختمان نیست؛ جایی است که چیزها می‌آیند تا فراموش شوند.",
+          "روی دیوار، تلفن داخلی قدیمی با سیم پیچ‌خورده آویزان است. گوشی را برمی‌داری: بوق آزاد است. خط وصل است، هرچند هیچ‌کس در این طبقه نیست که به آن زنگ بزند.",
+          "قفسه‌ها شماره‌گذاری شده‌اند. اگر شماره‌ای در دست داشته باشی، می‌دانی کدام قفسه را بگردی؛ اگر نداشته باشی، این اتاق فقط هزار کاغذ بی‌ربط است."
+        ],
+        "choices": [
+          {
+            "id": "search-the-old-folders",
+            "label": "قفسه را بر اساس شمارهٔ ارجاع می‌گردم.",
+            "condition": {
+              "kind": "all",
+              "conditions": [
+                {
+                  "kind": "any",
+                  "conditions": [
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "dated_note"
+                    },
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "schedule_reference"
+                    }
+                  ]
+                },
+                {
+                  "kind": "not",
+                  "condition": {
+                    "kind": "clueDiscovered",
+                    "clueId": "death_record_contradiction"
+                  }
+                }
+              ]
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-record-pull"
+            },
+            "effects": [
+              {
+                "kind": "discoverClue",
+                "clueId": "death_record_contradiction"
+              }
+            ]
+          },
+          {
+            "id": "answer-the-internal-phone",
+            "label": "گوشی را برمی‌دارم؛ کسی از داخلی زنگ می‌زند.",
+            "condition": {
+              "kind": "compareVariable",
+              "variable": "strangerContact",
+              "operator": "gte",
+              "value": 1
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-phone"
+            }
+          },
+          {
+            "id": "keep-moving",
+            "label": "به قفسه‌ها دست نمی‌زنم و جلو می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-record-pull",
+        "title": "پرونده‌ای که نباید اینجا باشد",
+        "backgroundAssetId": "alcove",
+        "narration": [
+          "قفسهٔ شمارهٔ چهار، ردیف سوم. پرونده نازک است و جای انگشت روی جلدش مانده. داخلش گزارش مرگ است: دوازدهم مهر، امضا در پایین صفحه، و یک شمارهٔ ارجاع که سطر انتقالش، چهاردهم مهر ثبت شده است.",
+          "دو تاریخ که نمی‌توانند هر دو درست باشند. یکی از آن‌ها دروغ است و کسی آن را نوشته — اما این کاغذ نمی‌گوید چه کسی، و نمی‌گوید چرا. تنها چیزی که ثابت می‌کند این است که ثبتِ رسمی این ساختمان، دست‌کم یک بار، با خودش نخوانده است.",
+          "در پایین گزارش، جای امضا با جوهر پاک‌شده ناخوانا شده و زیرش فقط یک حرف مانده است. هرچه هست، کسی نمی‌خواسته خوانده شود."
+        ],
+        "choices": [
+          {
+            "id": "note-the-archive-number",
+            "label": "شمارهٔ بایگانی را به خاطر می‌سپرم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "close-the-file",
+            "label": "پرونده را سر جایش می‌گذارم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-phone",
+        "title": "زنگِ داخلی",
+        "backgroundAssetId": "alcove",
+        "narration": [
+          "صدای مرد همان صدای پشت در سلول است، فقط این بار از سیم می‌آید. می‌گوید از داخلی دفتر نگهبانی زنگ می‌زند، جایی که کسی شمارهٔ داخلی را بررسی نمی‌کند و هر کسی می‌تواند چند دقیقه پشت میز خالی بنشیند. این توضیح، تماس را ممکن می‌کند؛ آن را بی‌خطر نمی‌کند.",
+          "بعد می‌گوید در سوابق انتقال، تاریخ‌ها با هم نمی‌خوانند و اگر تو هم به همان چیزی رسیده باشی، می‌داند که وقتش رسیده. این یک ادعاست؛ پشتش سندی نیست، فقط اطمینانی در لحن.",
+          "می‌توانی بگذاری حرفش را کامل بزند، یا چیزی بخواهی که بتوانی خودت بررسی کنی، یا گوشی را بگذاری و با آنچه خودت دیده‌ای ادامه بدهی."
+        ],
+        "choices": [
+          {
+            "id": "let-him-explain",
+            "label": "می‌گذارم کامل توضیح بدهد.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-phone-talk"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerTrust",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "demand-something-checkable",
+            "label": "چیزی می‌خواهم که خودم بتوانم بررسی کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-phone-talk"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerKnowledge",
+                "amount": 1
+              },
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerTrust",
+                "amount": -1
+              },
+              {
+                "kind": "discoverClue",
+                "clueId": "telephone_date_claim"
+              }
+            ]
+          },
+          {
+            "id": "hang-up",
+            "label": "گوشی را می‌گذارم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-phone-talk",
+        "title": "چیزی که می‌شود بررسی کرد",
+        "backgroundAssetId": "alcove",
+        "narration": [
+          "مرد چیزی نمی‌پرسد و چیزی هم انکار نمی‌کند. می‌گوید گزارش مرگ در پروندهٔ قدیمی، امضایی دارد که با تاریخ انتقال جور نیست و اگر تو دنبال شمارهٔ ارجاع را گرفته باشی، خودت می‌توانی ببینی. اسم هیچ‌کس را نمی‌آورد — نه اسم خودش، نه اسم نوید.",
+          "لحنش شبیه کسی است که مدت‌ها منتظر این تماس بوده؛ و همین هم هست که آزارت می‌دهد. کسی که شش ماه منتظر مانده، یا خیلی می‌داند، یا خیلی به چیزی نیاز دارد.",
+          "خط قطع می‌شود، بی‌خداحافظی. بوق آزاد می‌ماند و تو با شماره‌ای در دست و مردی در ذهن می‌مانی."
+        ],
+        "choices": [
+          {
+            "id": "ask-what-he-wants",
+            "label": "قبل از قطع‌شدن می‌پرسم از تو چه می‌خواهد.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "end-the-call-yourself",
+            "label": "خودم تماس را تمام می‌کنم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-final-approach"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "composure",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-final-approach",
+        "title": "حیاطِ خدمه، پشت درِ آخر",
+        "backgroundAssetId": "gate",
+        "narration": [
+          "درِ پشتی انبار به حیاط کوچک خدمه باز می‌شود؛ جایی که ترولی‌ها شب‌ها آنجا می‌مانند و دیوار انتهایی‌اش، از آن طرف، به کوچهٔ پشت زندان می‌رسد. اگر از این حیاط بگذری، دیگر برنمی‌گردی.",
+          "چند دقیقه وقت داری. اگر تا حالا چیزی برداشته باشی، در جیبت است؛ اگر چیزی فهمیده باشی، در سرت. اگر هیچ‌کدام را نداشته باشی، باز هم می‌توانی بروی — فقط بی‌آنکه بدانی چه چیزی را پشت سر می‌گذاری.",
+          "سه راه پیش رویت است و هر سه، به یک اندازه واقعی‌اند: برو با همان نقشه‌ای که شش ماه رویش کار کردی؛ یا تا سندی در دست نداری جلو نرو؛ یا با مردی که نام واقعی‌ات را می‌داند، دربارهٔ تنها کسی حرف بزن که این هشت سال اسمش را نبرده‌ای."
+        ],
+        "choices": [
+          {
+            "id": "go-with-the-plan",
+            "label": "با نقشه پیش می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-ending-plan"
+            }
+          },
+          {
+            "id": "ask-for-evidence-first",
+            "label": "می‌گویم تا سند روشنی نبینم، جلو نمی‌روم.",
+            "condition": {
+              "kind": "any",
+              "conditions": [
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "dated_note"
+                },
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "office_record_discrepancy"
+                },
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "schedule_reference"
+                },
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "telephone_date_claim"
+                }
+              ]
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-ending-evidence"
+            }
+          },
+          {
+            "id": "ask-him-about-navid",
+            "label": "دربارهٔ نوید از او می‌پرسم.",
+            "condition": {
+              "kind": "all",
+              "conditions": [
+                {
+                  "kind": "compareVariable",
+                  "variable": "strangerContact",
+                  "operator": "gte",
+                  "value": 1
+                },
+                {
+                  "kind": "compareVariable",
+                  "variable": "strangerKnowledge",
+                  "operator": "gte",
+                  "value": 2
+                }
+              ]
+            },
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-ending-connection"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-ending-plan",
+        "title": "قدم در حیاط",
+        "backgroundAssetId": "gate",
+        "narration": [
+          "از در می‌گذری و هوای سرد حیاط، بوی گازوئیل و خاکِ خیس را با خودش می‌آورد. نقشه همه‌جایش درست است: درِ پشتی، دیوار انتهایی، و جای خالیِ کوچکی که ترولی‌ها آن را پوشانده‌اند.",
+          "و در همان لحظه، چیزی که نمی‌توانی انکارش کنی: چراغِ دفتر نگهبانی، که همیشه تا صبح روشن است، خاموش شده. یک دقیقه پیش روشن بود. کسی آن را خاموش کرده تا از پشت شیشه نبیند.",
+          "نمی‌دانی چه کسی. نمی‌دانی از کِی. فقط می‌دانی که دارد اتفاقی می‌افتد که در نقشهٔ تو نیست."
+        ],
+        "choices": [
+          {
+            "id": "step-into-the-yard",
+            "label": "به حیاط می‌روم.",
+            "outcome": {
+              "type": "ending",
+              "endingId": "ch1-ending-a-ambiguous-truth"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-ending-evidence",
+        "title": "کاغذی که باید جواب بدهد",
+        "backgroundAssetId": "gate",
+        "narration": [
+          "می‌ایستی و چیزی را که در دست داری، روی هم می‌گذاری: تاریخ‌ها، شماره‌ها، و سطری که نامش خالی مانده. اینکه تو را متوقف کرده، ترس نیست؛ حساب‌وکتاب است. عجله نداری، و همین تنها مزیتی است که تا حالا به دست آورده‌ای.",
+          "اگر دو تاریخ را کنار هم بگذاری، چیزی هست که دیگر نمی‌شود نادیده گرفت: گزارش مرگی که پیش از انتقال امضا شده. اگر این دو تاریخ را کنار هم نگذاری، فقط سندهایی داری که به هم اشاره می‌کنند و هیچ‌کدام را نمی‌توانی کامل کنی.",
+          "دو راه داری و هر دو معتبر: یا این را دنبال کن، یا با همان نقشه پیش برو و بعداً به آن برگرد."
+        ],
+        "choices": [
+          {
+            "id": "put-the-two-dates-together",
+            "label": "دو تاریخ را کنار هم می‌گذارم و پرونده را باز نگه می‌دارم.",
+            "condition": {
+              "kind": "clueDiscovered",
+              "clueId": "death_record_contradiction"
+            },
+            "outcome": {
+              "type": "ending",
+              "endingId": "ch1-ending-b-contradictory-dossier"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "routeKnowledge",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "id": "go-forward-without-proof",
+            "label": "بدون این محاسبه، با همان نقشه پیش می‌روم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-ending-plan"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ch1-ending-connection",
+        "title": "اسمی که هشت سال نگفته‌ای",
+        "backgroundAssetId": "gate",
+        "narration": [
+          "اسم نوید را می‌آوری. سکوتِ سیم، این بار طولانی‌تر از همیشه است. مرد پشت خط چیزی نمی‌گوید که بشود به‌عنوان جواب ثبتش کرد؛ فقط می‌گوید: «اگر این را پرسیدی، پیازی که ریشه‌اش را از قبل می‌دانستی.»",
+          "می‌توانی همین‌جا کاغذی را که در دست داری رو کنی — دو تاریخ، یک شماره، و دو حرف حکاکی‌شده روی دیوار — یا می‌توانی بدون نشان دادن چیزی، پرسشت را تکرار کنی.",
+          "فرق این دو، بیشتر از یک برگه است: در یکی، چیزی برای معامله داری؛ در دیگری، فقط سؤال داری و یک مرد در انتهای سیم."
+        ],
+        "choices": [
+          {
+            "id": "show-him-the-record",
+            "label": "گزارش و دو حرف را روی می‌گذارم و جواب می‌خواهم.",
+            "condition": {
+              "kind": "all",
+              "conditions": [
+                {
+                  "kind": "clueDiscovered",
+                  "clueId": "death_record_contradiction"
+                },
+                {
+                  "kind": "any",
+                  "conditions": [
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "corridor_initials"
+                    },
+                    {
+                      "kind": "clueDiscovered",
+                      "clueId": "telephone_date_claim"
+                    }
+                  ]
+                },
+                {
+                  "kind": "compareVariable",
+                  "variable": "strangerTrust",
+                  "operator": "gte",
+                  "value": 1
+                },
+                {
+                  "kind": "compareVariable",
+                  "variable": "criticalMistakes",
+                  "operator": "lte",
+                  "value": 1
+                }
+              ]
+            },
+            "outcome": {
+              "type": "ending",
+              "endingId": "ch1-ending-c-possible-connection"
+            }
+          },
+          {
+            "id": "ask-without-a-paper-in-your-hand",
+            "label": "بدون نشان دادن چیزی، فقط می‌پرسم.",
+            "outcome": {
+              "type": "transition",
+              "targetSceneId": "ch1-ending-thin"
+            },
+            "effects": [
+              {
+                "kind": "incrementVariable",
+                "variable": "strangerTrust",
+                "amount": -1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ch1-ending-thin",
+        "title": "جوابی که جواب نیست",
+        "backgroundAssetId": "gate",
+        "narration": [
+          "مرد جواب می‌دهد، اما جوابش شبیه جمله‌ای است که از قبل آماده کرده‌اند: نوید کسی بود که پرونده‌اش را نبستند، فقط گذاشتند بخوابد؛ و خواباندنِ پرونده در آذرخش، همیشه کار یک نفر نیست.",
+          "بعد خط قطع می‌شود و تو می‌مانی با جمله‌ای که نه رد می‌شود، نه ثابت. اگر در جیبت کاغذی بود، حالا در جیبت نیست که بتواند حرفی بزند — و این تنها چیزی است که در این لحظه واقعاً دست خودت بوده.",
+          "از حیاط، صدای خفیف تریلی می‌آید که در ساعت چهار و نیم صبح نباید در این محوطه باشد."
+        ],
+        "choices": [
+          {
+            "id": "walk-out-anyway",
+            "label": "به راهرو برمی‌گردم و با همان نقشه پیش می‌روم.",
+            "outcome": {
+              "type": "ending",
+              "endingId": "ch1-ending-a-ambiguous-truth"
+            }
+          }
+        ]
+      }
+    ],
+    "endings": [
+      {
+        "id": "ch1-ending-a-ambiguous-truth",
+        "title": "پایان الف — حقیقتی مبهم",
+        "summary": "اگر تمام این شش ماه، نقشهٔ تو تحت نظر بوده، پس چه کسی از ابتدا می‌دانسته امروز فرار خواهی کرد؟",
+        "tone": "ambiguous"
+      },
+      {
+        "id": "ch1-ending-b-contradictory-dossier",
+        "title": "پایان ب — پروندهٔ متناقض",
+        "summary": "چه کسی گزارش مرگ او را امضا کرده بود؟",
+        "tone": "grim"
+      },
+      {
+        "id": "ch1-ending-c-possible-connection",
+        "title": "پایان ج — پیوندی ممکن",
+        "summary": "اگر نوید اینجاست، پس آن شش ماه را کجا گذرانده‌ای؟",
+        "tone": "hopeful"
+      }
+    ]
+  },
+  "flow": {
+    "readingPauseMs": {}
+  },
+  "presentation": {
+    "overrides": [
+      {
+        "sceneId": "ch1-stranger-arrives",
+        "focus": {
+          "x": 50,
+          "y": 35
+        },
+        "camera": "none",
+        "overlay": "cold"
+      },
+      {
+        "sceneId": "ch1-corridor-first",
+        "camera": "pan-right",
+        "overlay": "haze"
+      },
+      {
+        "sceneId": "ch1-locked-door",
+        "focus": {
+          "x": 50,
+          "y": 60
+        },
+        "camera": "none",
+        "overlay": "cold"
+      },
+      {
+        "sceneId": "ch1-door-attempt",
+        "camera": "none",
+        "transition": "fade",
+        "overlay": "cold"
+      },
+      {
+        "sceneId": "ch1-final-approach",
+        "focus": {
+          "x": 50,
+          "y": 40
+        },
+        "camera": "slow-zoom-out",
+        "overlay": "cold"
+      }
+    ],
+    "assets": {}
+  },
+  "audio": {
+    "assets": {},
+    "scenes": {}
+  }
+}

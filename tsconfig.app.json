@@ -31,5 +31,5 @@
 
     "types": ["vite/client", "vitest/globals", "node"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "tools"]
 }

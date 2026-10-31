@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "assets:check": "vitest run tests/presentation.assets.test.ts",
+    "pack:full": "vite build --ssr tools/exportFullPack.ts --outDir node_modules/.cache/pack-full --emptyOutDir --logLevel warn && node node_modules/.cache/pack-full/exportFullPack.js",
     "lint": "eslint .",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
     "feature:new": "bash scripts/new-feature.sh",

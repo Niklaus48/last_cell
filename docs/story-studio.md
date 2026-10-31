@@ -19,6 +19,12 @@ There is exactly one artifact: **`src/story/content/chapter1/studio.pack.json`**
   the next run uses the new content — no code edit, no copy step.
 - **خروجی JSON** downloads the same pack, for handing it to someone else or
   keeping it outside the repo.
+- **خروجی کامل (با کل داستان)** downloads the same pack with `story` written out
+  in full — `initialVariables`, `variableMeta`, every scene, choice, condition
+  and effect. `"story": null` means "use the canonical chapter", which is right
+  for the repo but useless to a text editor, a translation pass or another tool;
+  this is the file for those. The same file can be produced without a browser:
+  `npm run pack:full` writes `exports/chapter1.pack.full.json`.
 - The pack is JSON in the repository on purpose: versioned, diffable, reviewable
   in a PR, works offline, and needs no database.
 
@@ -98,7 +104,14 @@ delete button is disabled (with the locations in the tooltip): deleting it would
 make the pack invalid, and hunting for the reference by hand is not reasonable.
 
 An unedited story is written to the pack as `"story": null`, so a "no edits"
-apply produces a two-line diff instead of a 40 KB copy of the content.
+apply produces a two-line diff instead of a 40 KB copy of the content. Read
+`null` as *"the story is unchanged — load the canonical chapter"*, never as
+*"there is no story here"*: the game and the studio both fall back to the
+TypeScript content. If you need the story spelled out (editing the JSON by hand,
+translating it, feeding another tool), use **خروجی کامل** in the studio or
+`npm run pack:full`, which writes `exports/chapter1.pack.full.json` from the same
+source of truth — 8 initial variables, 32 scenes, 69 choices, 13 gated choices,
+51 state-changing choices, 5 presentation overrides.
 
 ## The graph shows the rules
 
