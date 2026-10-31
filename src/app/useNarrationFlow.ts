@@ -60,6 +60,11 @@ export interface UseNarrationFlowOptions {
   readonly narrationParagraphs: number;
   /** Reading pauses; defaults to the central `NARRATION_TIMING`. */
   readonly timing?: NarrationTiming | undefined;
+  /**
+   * Per-scene reading pause from the content pack, in milliseconds. When set it
+   * replaces the paragraph-scaled narration pause for this scene only.
+   */
+  readonly readingPauseMs?: number | undefined;
   /** Monotonic clock, injectable in tests. */
   readonly now?: (() => number) | undefined;
 }
@@ -80,6 +85,7 @@ export function useNarrationFlow({
   choices,
   narrationParagraphs,
   timing,
+  readingPauseMs,
   now,
 }: UseNarrationFlowOptions): NarrationFlowState {
   const playable = active && state !== null && state.progress.status === 'playing';
@@ -139,7 +145,7 @@ export function useNarrationFlow({
     // The pause scales with what there is to read, and is never negative.
     const duration =
       phase === 'scene_narration'
-        ? narrationStageDurationMs(narrationParagraphs, timing)
+        ? (readingPauseMs ?? narrationStageDurationMs(narrationParagraphs, timing))
         : phase === 'choice_announcement'
           ? announcementStageDurationMs(choices.length, timing)
           : null;
@@ -188,7 +194,7 @@ export function useNarrationFlow({
       stopTimer();
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [key, phase, timing, advance, narrationParagraphs, choices.length]);
+  }, [key, phase, timing, advance, narrationParagraphs, choices.length, readingPauseMs]);
 
   const announcement = useMemo(() => buildChoiceAnnouncement(choices), [choices]);
 

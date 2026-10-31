@@ -26,7 +26,8 @@ import {
   type SceneVisualSource,
 } from './types';
 import { hasFallbackGradient } from './fallbacks';
-import { hasAssetEntry } from './assetManifest';
+import { hasResolvedAssetEntry } from './assetManifest';
+import { getPackPresentationOverrides } from '../story/content/pack';
 
 interface LocationDefaults {
   readonly camera: CameraPreset;
@@ -164,12 +165,27 @@ function locationDefaults(backgroundAssetId: string | undefined): LocationDefaul
 }
 
 const overrideByScene = new Map<string, ScenePresentationOverride>(
-  SCENE_PRESENTATION_OVERRIDES.map((entry) => [entry.sceneId, entry]),
+  activePresentationOverrides().map((entry) => [entry.sceneId, entry]),
 );
 
 /**
+ * The overrides actually in force: the hand-written ones plus anything the studio
+ * pack declares. A pack entry for a scene replaces the hand-written entry, so the
+ * studio is always the last word without having to edit TypeScript.
+ */
+export function activePresentationOverrides(): readonly ScenePresentationOverride[] {
+  const fromPack = getPackPresentationOverrides();
+  if (fromPack.length === 0) {
+    return SCENE_PRESENTATION_OVERRIDES;
+  }
+  const packIds = new Set(fromPack.map((override) => override.sceneId));
+  return [...SCENE_PRESENTATION_OVERRIDES.filter((override) => !packIds.has(override.sceneId)), ...fromPack];
+}
+
+/**
  * Resolves the presentation for a scene. Works for any scene id — including
- * scenes with no metadata at all, and scenes from the dev fixture.
+ * scenes with no metadata at all, scenes from the dev fixture, and scenes added
+ * in the studio.
  */
 export function getScenePresentation(scene: SceneVisualSource): ScenePresentation {
   const base = locationDefaults(scene.backgroundAssetId);
@@ -204,7 +220,7 @@ export function validateScenePresentation(
   const seen = new Set<string>();
 
   for (const scene of scenes) {
-    if (scene.backgroundAssetId !== undefined && !hasAssetEntry(scene.backgroundAssetId)) {
+    if (scene.backgroundAssetId !== undefined && !hasResolvedAssetEntry(scene.backgroundAssetId)) {
       problems.push(
         `scene "${scene.id}" declares backgroundAssetId "${scene.backgroundAssetId}" which is not in the asset manifest`,
       );
@@ -247,7 +263,7 @@ export function validateScenePresentation(
     if (override.assetId !== undefined) {
       if (override.assetId.trim().length === 0) {
         problems.push(`scene "${override.sceneId}" has an empty assetId`);
-      } else if (!hasAssetEntry(override.assetId)) {
+      } else if (!hasResolvedAssetEntry(override.assetId)) {
         problems.push(
           `scene "${override.sceneId}" uses asset id "${override.assetId}" which is not in the asset manifest`,
         );

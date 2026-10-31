@@ -42,6 +42,7 @@ import {
 } from '../ui/messages';
 import { useTimedDecision, type ActiveTimedDecision, type TimedDecisionExpiry } from './useTimedDecision';
 import { useNarrationFlow, type NarrationFlowState } from './useNarrationFlow';
+import { getSceneReadingPauseMs } from '../story/content/pack';
 import type { NarrationTiming } from './narrationFlow';
 
 export type SessionPhase =
@@ -71,6 +72,8 @@ export interface StorySession {
    * the choices are not interactive and no countdown exists.
    */
   readonly flow: NarrationFlowState;
+  /** Identity of the current session; a new value restarts scene audio. */
+  readonly sessionEpoch: number;
   /** Whether a resume-able local save exists (validated, not just present). */
   readonly saveAvailability: SaveAvailability;
   /** False when the browser refuses local storage entirely. */
@@ -158,6 +161,8 @@ export function useStorySession(
     narrationParagraphs:
       playableState === null ? 0 : engine.getCurrentScene(playableState).narration.length,
     timing: options.narrationTiming,
+    readingPauseMs:
+      playableState === null ? undefined : getSceneReadingPauseMs(playableState.currentSceneId),
     now: options.now,
   });
 
@@ -391,6 +396,7 @@ export function useStorySession(
     isCommitting,
     timedDecision,
     flow,
+    sessionEpoch,
     saveAvailability,
     storageAvailable: storage !== null,
     saveFeedback,

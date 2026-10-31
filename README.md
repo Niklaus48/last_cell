@@ -58,6 +58,7 @@ npm run dev        # http://localhost:5173  (dev server, bound to all interfaces
 Production web build and a local preview of it:
 
 ```bash
+npm run studio     # the story studio at http://localhost:5173/studio.html (dev only)
 npm run build      # tsc -b (type check) + vite build → dist/
 npm run preview    # serve dist/
 ```
@@ -67,7 +68,7 @@ Quality gates:
 ```bash
 npm run typecheck  # tsc -b, strict mode, zero errors expected
 npm run lint       # eslint .
-npm run test       # vitest run (209 tests)
+npm run test       # vitest run (396 tests)
 npm run verify     # typecheck + lint + test + build in one go
 ```
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useStorySession } from './useStorySession';
 import { DEFAULT_STORY_KEY, type StoryKey } from '../story/content';
 import {
@@ -11,6 +11,7 @@ import type { ActiveTimedDecision } from './useTimedDecision';
 import type { NarrationFlowState } from './useNarrationFlow';
 import type { SaveAvailability, SaveStorage } from '../persistence';
 import { getScenePresentation } from '../presentation';
+import { readMuted, writeMuted } from '../ui/audio/mute';
 import type { SaveFeedback } from './useStorySession';
 import { SAVE_INVALID_HINT, SAVE_NONE_MESSAGE, SAVE_STORAGE_DISABLED_HINT } from '../ui/messages';
 import { TitleScreen } from '../ui/screens/TitleScreen';
@@ -36,6 +37,13 @@ interface AppProps {
  */
 export function App({ storyKey = DEFAULT_STORY_KEY, storage }: AppProps = {}): React.ReactElement {
   const session = useStorySession(storyKey, { storage });
+  const [muted, setMutedState] = useState<boolean>(() => readMuted());
+  const toggleMuted = useCallback(() => {
+    setMutedState((current) => {
+      writeMuted(!current);
+      return !current;
+    });
+  }, []);
 
   const resumeNote = describeSave(session.storageAvailable, session.saveAvailability);
 
@@ -62,6 +70,9 @@ export function App({ storyKey = DEFAULT_STORY_KEY, storage }: AppProps = {}): R
       checkpoints={session.checkpoints}
       timedDecision={session.timedDecision}
       flow={session.flow}
+      sceneEpoch={session.sessionEpoch}
+      muted={muted}
+      onToggleMuted={toggleMuted}
       isCommitting={session.isCommitting}
       storageAvailable={session.storageAvailable}
       hasSave={session.saveAvailability.status === 'valid'}
@@ -97,6 +108,9 @@ interface PlaySessionProps {
   readonly checkpoints: readonly Checkpoint[];
   readonly timedDecision: ActiveTimedDecision | null;
   readonly flow: NarrationFlowState;
+  readonly sceneEpoch: number;
+  readonly muted: boolean;
+  readonly onToggleMuted: () => void;
   readonly isCommitting: boolean;
   readonly storageAvailable: boolean;
   readonly hasSave: boolean;
@@ -116,6 +130,9 @@ function PlaySession({
   checkpoints,
   timedDecision,
   flow,
+  sceneEpoch,
+  muted,
+  onToggleMuted,
   isCommitting,
   storageAvailable,
   hasSave,
@@ -164,6 +181,9 @@ function PlaySession({
       checkpointLabel={checkpoint?.label ?? null}
       timedDecision={timedDecision}
       flow={flow}
+      sceneEpoch={sceneEpoch}
+      muted={muted}
+      onToggleMuted={onToggleMuted}
       isCommitting={isCommitting}
       storageAvailable={storageAvailable}
       hasSave={hasSave}

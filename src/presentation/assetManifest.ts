@@ -8,7 +8,12 @@
  *
  * Values are file *names* inside `SCENE_ASSET_DIRECTORY`, not URLs, so the base
  * path and the naming rule stay in one place.
+ *
+ * The studio content pack may override or extend this map (`presentation.assets`
+ * in `src/story/content/chapter1/studio.pack.json`); overrides win, and a `null`
+ * override means "no artwork yet", exactly like a `null` entry here.
  */
+import { getPackArtworkAssets } from '../story/content/pack';
 
 export const SCENE_ASSET_DIRECTORY = '/assets/scenes/chapter-1/';
 
@@ -62,27 +67,61 @@ export function hasAssetEntry(assetId: string): boolean {
  * An unknown id is a content/typo problem: it is reported once in development
  * and then treated exactly like a missing file, so the game keeps working.
  */
+/**
+ * Artwork supplied through the studio content pack.
+ *
+ * The pack never *adds* a fallback: a missing or invalid entry simply leaves the
+ * built-in behaviour (gradient) in place.
+ */
+/** The pack's own entry for an id, or `undefined` when the pack says nothing. */
+function packEntry(assetId: string): string | null | undefined {
+  const overrides = getPackArtworkAssets();
+  if (!Object.prototype.hasOwnProperty.call(overrides, assetId)) {
+    return undefined;
+  }
+  return overrides[assetId] ?? null;
+}
+
+/** True when the id is declared here or by the studio pack. */
+export function hasResolvedAssetEntry(assetId: string): boolean {
+  return hasAssetEntry(assetId) || packEntry(assetId) !== undefined;
+}
+
+/** File name for an id, with pack overrides applied. */
+function resolvedFile(assetId: string): string | null {
+  const fromPack = packEntry(assetId);
+  if (fromPack !== undefined) {
+    return fromPack;
+  }
+  return SCENE_ASSETS[assetId] ?? null;
+}
+
 export function resolveAssetUrl(assetId: string): string | null {
-  if (!hasAssetEntry(assetId)) {
+  if (!hasResolvedAssetEntry(assetId)) {
     warnOnce(`unknown asset id "${assetId}" — falling back to the scene gradient.`);
     return null;
   }
-  const file = SCENE_ASSETS[assetId];
+  const file = resolvedFile(assetId);
   if (file === null || file === undefined || file === '') {
     return null;
   }
   return `${SCENE_ASSET_DIRECTORY}${file}`;
 }
 
+/** Every asset id known to the game (built-in manifest + studio pack). */
+export function knownAssetIds(): readonly string[] {
+  return [...new Set([...Object.keys(SCENE_ASSETS), ...Object.keys(getPackArtworkAssets())])];
+}
+
 /** Asset ids that exist in the manifest but have no file yet. */
 export function pendingAssetIds(): readonly string[] {
-  return Object.keys(SCENE_ASSETS).filter((id) => SCENE_ASSETS[id] === null);
+  return knownAssetIds().filter((id) => resolvedFile(id) === null);
 }
 
 /** Asset ids that already point at a file. */
 export function suppliedAssetIds(): readonly string[] {
-  return Object.keys(SCENE_ASSETS).filter((id) => {
-    const file = SCENE_ASSETS[id];
+  return knownAssetIds().filter((id) => {
+    const file = resolvedFile(id);
     return typeof file === 'string' && file.length > 0;
   });
 }

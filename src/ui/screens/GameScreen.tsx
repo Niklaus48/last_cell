@@ -9,6 +9,7 @@ import type { SceneViewModel } from '../../story/state/sceneView';
 import type { ScenePresentation } from '../../presentation';
 import { SceneBackdrop } from '../scene/SceneBackdrop';
 import { ChoiceAnnouncement, NarrationGate } from '../components/NarrationGate';
+import { useSceneAudio } from '../audio/useSceneAudio';
 import type { NarrationFlowState } from '../../app/useNarrationFlow';
 import type { ActiveTimedDecision } from '../../app/useTimedDecision';
 import type { SaveFeedback } from '../../app/useStorySession';
@@ -25,6 +26,10 @@ interface GameScreenProps {
   readonly timedDecision: ActiveTimedDecision | null;
   /** Narration stage of the scene: choices exist only in `choices_available`. */
   readonly flow: NarrationFlowState;
+  /** Session identity; a new value restarts the scene's audio. */
+  readonly sceneEpoch: number;
+  readonly muted: boolean;
+  readonly onToggleMuted: () => void;
   /** True while a transition or save/load is being applied. */
   readonly isCommitting: boolean;
   readonly storageAvailable: boolean;
@@ -44,6 +49,9 @@ export function GameScreen({
   checkpointLabel,
   timedDecision,
   flow,
+  sceneEpoch,
+  muted,
+  onToggleMuted,
   isCommitting,
   storageAvailable,
   hasSave,
@@ -54,6 +62,8 @@ export function GameScreen({
   onRestart,
 }: GameScreenProps): React.ReactElement {
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
+  // Sound is best-effort: it never blocks reading, choices or the countdown.
+  useSceneAudio({ sceneId: view.scene.id, epoch: sceneEpoch, muted });
 
   const requestSave = (): void => {
     // Overwriting is the destructive part, so it is the only part that asks.
@@ -85,6 +95,15 @@ export function GameScreen({
             aria-label="ذخیرهٔ بازی در همین مرورگر"
           >
             ذخیره
+          </button>
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={onToggleMuted}
+            aria-pressed={muted}
+            aria-label={muted ? 'روشن کردن صدا' : 'بی‌صدا کردن بازی'}
+          >
+            {muted ? 'صدا خاموش' : 'صدا روشن'}
           </button>
           <button type="button" className="button button--ghost" onClick={onRestart}>
             بازگشت به آغاز
