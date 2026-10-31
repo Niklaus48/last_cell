@@ -109,6 +109,8 @@ button { font: inherit; cursor: pointer; border-radius: 8px; }
 .choice-row, .cue-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .cue-row { grid-template-columns: minmax(0, 1fr) 110px auto; }
 
+.file-picker-wrap { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.upload-error { margin: 0; font-size: 11px; color: #e3a09a; }
 .file-picker { display: inline-flex; }
 .file-picker input[type="file"] { display: none; }
 .file-picker .secondary { display: inline-block; }

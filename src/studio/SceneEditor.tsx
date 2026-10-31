@@ -5,6 +5,7 @@
  * artwork and sound. Every edit goes through a mutator in `model.ts`, so the draft
  * stays immutable and the validation/preview stay in sync.
  */
+import { useState } from 'react';
 import type { ChoiceOutcome, SceneDefinition } from '../story/engine';
 import {
   CAMERA_PRESETS,
@@ -457,7 +458,13 @@ export function SceneEditor({ draft, scene, update, mutators }: SceneEditorProps
   );
 }
 
-/** Uploads a file through the dev API and reports the stored file name. */
+/**
+ * Uploads one file through the dev API and reports the stored file name.
+ *
+ * The stored name is sanitised and validated by the server (lowercase kebab-case,
+ * known extension, ≤ 6 MB), so the result is always visible: a rejected upload
+ * says why instead of failing quietly in the console.
+ */
 function FilePicker({
   kind,
   label,
@@ -467,14 +474,15 @@ function FilePicker({
   readonly label: string;
   readonly onUploaded: (fileName: string) => void;
 }): React.ReactElement {
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+
   const handle = async (file: File): Promise<void> => {
     const name = file.name
       .toLowerCase()
       .replace(/[^a-z0-9.-]+/g, '-')
       .replace(/-+/g, '-');
-    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(await file.arrayBuffer());
     let binary = '';
-    const bytes = new Uint8Array(buffer);
     for (const byte of bytes) {
       binary += String.fromCharCode(byte);
     }
@@ -483,28 +491,41 @@ function FilePicker({
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ kind, name, data: btoa(binary) }),
     });
-    const result = (await response.json()) as { ok: boolean; error?: string };
+    const result = (await response.json()) as { ok: boolean; error?: string; path?: string };
     if (!result.ok) {
       throw new Error(result.error ?? 'upload failed');
     }
     onUploaded(name);
+    setStatus({ ok: true, text: `ذخیره شد: ${result.path ?? name}` });
   };
 
   return (
-    <label className="file-picker">
-      <span className="secondary">{label}</span>
-      <input
-        type="file"
-        accept={kind === 'image' ? 'image/*' : 'audio/*'}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file !== undefined) {
+    <div className="file-picker-wrap">
+      <label className="file-picker">
+        <span className="secondary">{label}</span>
+        <input
+          type="file"
+          accept={kind === 'image' ? 'image/*' : 'audio/*'}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file === undefined) {
+              return;
+            }
+            setStatus(null);
             void handle(file).catch((error: unknown) => {
-              console.error(error);
+              setStatus({
+                ok: false,
+                text: `بارگذاری نشد: ${error instanceof Error ? error.message : 'خطای نامشخص'}`,
+              });
             });
-          }
-        }}
-      />
-    </label>
+          }}
+        />
+      </label>
+      {status !== null && (
+        <p className={status.ok ? 'muted small' : 'upload-error'} role="status">
+          {status.text}
+        </p>
+      )}
+    </div>
   );
 }
