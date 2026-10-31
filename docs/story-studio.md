@@ -45,6 +45,19 @@ The pack is untrusted input.
 
 ## What can be edited
 
+## Importing
+
+**ورود از JSON** in the header, or dropping a `.json` file anywhere on the page,
+loads a pack into the draft. Import is *not* save: the file is validated (the same
+validator as Apply), the draft is replaced, and nothing touches the disk until
+Apply is pressed. A file that fails — bad JSON, unknown scene target, invalid file
+name — is refused whole, with every error listed, and the current draft is left
+exactly as it was.
+
+Typical uses: pulling in a pack a colleague exported, restoring a backup, or
+hand-writing a small pack (just pacing and sound, `"story": null`) and previewing
+it before it becomes the game's content.
+
 | Area | Where in the pack | Notes |
 | --- | --- | --- |
 | Scene text | `story.scenes[].narration`, `.title` | paragraphs can be added, removed, reordered |

@@ -136,3 +136,55 @@ describe('pack fallback', () => {
     expect(result.pack?.story).toBeNull();
   });
 });
+
+describe('importPackJson', () => {
+  it('round-trips: what the studio exports can be imported again', async () => {
+    const { createDraft, draftToPack, importPackJson, updateScene } = await import('../src/studio/model');
+    const scene = chapter1Story.scenes[0];
+    expect(scene).toBeDefined();
+    if (scene === undefined) return;
+
+    const edited = updateScene(createDraft(), scene.id, { title: 'عنوان واردشده' });
+    const text = JSON.stringify(draftToPack(edited));
+    const result = importPackJson(text);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.draft.story.scenes[0]?.title).toBe('عنوان واردشده');
+    expect(result.draft.story.scenes).toHaveLength(chapter1Story.scenes.length);
+  });
+
+  it('refuses unreadable JSON without throwing', async () => {
+    const { importPackJson } = await import('../src/studio/model');
+    const result = importPackJson('{ not json');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors[0]).toContain('JSON');
+  });
+
+  it('refuses a structurally invalid pack and explains why', async () => {
+    const { importPackJson, createDraft, draftToPack, retargetChoice } = await import('../src/studio/model');
+    const scene = chapter1Story.scenes[0];
+    if (scene === undefined) return;
+    const broken = retargetChoice(createDraft(), scene.id, scene.choices[0]?.id ?? '', {
+      type: 'transition',
+      targetSceneId: 'ghost-scene',
+    });
+    const result = importPackJson(JSON.stringify(draftToPack(broken)));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join(' ')).toContain('ghost-scene');
+  });
+
+  it('imports the shipped pack file back to the canonical chapter', async () => {
+    const { importPackJson } = await import('../src/studio/model');
+    const raw = (await import('../src/story/content/chapter1/studio.pack.json')) as {
+      default: unknown;
+    };
+    const result = importPackJson(JSON.stringify(raw.default));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.draft.story.scenes).toHaveLength(chapter1Story.scenes.length);
+    expect(result.draft.audioAssets).toEqual({});
+  });
+});

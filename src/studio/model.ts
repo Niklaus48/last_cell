@@ -16,6 +16,7 @@ import type {
 } from '../story/engine';
 import { chapter1Story } from '../story/content/chapter1';
 import { EMPTY_PACK, type ContentPack, type SceneAudio } from '../story/content/pack/types';
+import { validateContentPack } from '../story/content/pack/validate';
 import {
   SCENE_PRESENTATION_OVERRIDES,
 } from '../presentation/scenePresentation';
@@ -43,6 +44,34 @@ export function draftFromPack(pack: ContentPack): StudioDraft {
     audioAssets: pack.audio?.assets ?? {},
     sceneAudio: pack.audio?.scenes ?? {},
   };
+}
+
+/** What an import attempt produced: a draft, or the reasons it was refused. */
+export type ImportResult =
+  | { readonly ok: true; readonly draft: StudioDraft }
+  | { readonly ok: false; readonly errors: readonly string[] };
+
+/**
+ * Reads a pack from JSON text — the inverse of the "export JSON" button.
+ *
+ * Importing is deliberately *not* saving: the file lands in the draft, where it
+ * can be inspected and edited, and only the Apply button writes to disk. A file
+ * that fails validation changes nothing.
+ */
+export function importPackJson(text: string): ImportResult {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text) as unknown;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'unreadable file';
+    return { ok: false, errors: [`فایل JSON خوانده نشد: ${detail}`] };
+  }
+
+  const result = validateContentPack(raw);
+  if (!result.ok || result.pack === null) {
+    return { ok: false, errors: result.errors.length > 0 ? result.errors : ['بستهٔ نامعتبر'] };
+  }
+  return { ok: true, draft: draftFromPack(result.pack) };
 }
 
 /** A fresh draft: canonical story, canonical presentation, no audio. */

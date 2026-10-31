@@ -40,6 +40,15 @@ button { font: inherit; cursor: pointer; border-radius: 8px; }
 .mini--danger { border-color: var(--studio-danger); color: #e3a09a; }
 .link { color: var(--studio-accent); }
 
+.file-button { position: relative; overflow: hidden; cursor: pointer; display: inline-block; }
+.file-button input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.studio.is-dragging { outline: 2px dashed var(--studio-accent); outline-offset: -6px; }
+.drop-hint {
+  margin: 8px 16px 0; padding: 10px 12px; border-radius: 8px; text-align: center;
+  background: #1a1f2b; border: 1px dashed var(--studio-accent); color: var(--studio-text);
+}
+
 .banner { margin: 8px 16px 0; padding: 8px 12px; border-radius: 8px; }
 .banner--ok { background: #16241a; border: 1px solid #2c5136; }
 .banner--error { background: #2a1414; border: 1px solid var(--studio-danger); }

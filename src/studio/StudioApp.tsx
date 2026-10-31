@@ -20,6 +20,7 @@ import {
   createDraft,
   draftFromPack,
   draftToPack,
+  importPackJson,
   moveNarrationParagraph,
   presentationFor,
   removeChoice,
@@ -52,6 +53,10 @@ export function StudioApp(): React.ReactElement {
   const [selectedId, setSelectedId] = useState<string>(() => draft.story.initialSceneId);
   const [save, setSave] = useState<SaveState>({ kind: 'idle' });
   const [loaded, setLoaded] = useState(false);
+  /** Why the last import was refused; empty when there was none. */
+  const [importErrors, setImportErrors] = useState<readonly string[]>([]);
+  /** True while a file is being dragged over the page. */
+  const [dragging, setDragging] = useState(false);
 
   const update = useCallback((next: StudioDraft) => {
     setDraft(next);
@@ -124,6 +129,34 @@ export function StudioApp(): React.ReactElement {
     [draft, update],
   );
 
+  /**
+   * Loads a pack from a JSON file into the draft.
+   *
+   * Nothing is written to disk here: the point of an import is to *inspect* a
+   * pack (a colleague's edit, a backup, a hand-written file) and then decide,
+   * with Apply, whether it becomes the game's content. A file that fails
+   * validation leaves the current draft untouched and says why.
+   */
+  const importFile = useCallback((file: File) => {
+    setImportErrors([]);
+    void file
+      .text()
+      .then((text) => {
+        const result = importPackJson(text);
+        if (!result.ok) {
+          setImportErrors(result.errors);
+          return;
+        }
+        setDraft(result.draft);
+        setSelectedId(result.draft.story.initialSceneId);
+        setSave({ kind: 'idle' });
+        setImportErrors([]);
+      })
+      .catch((error: unknown) => {
+        setImportErrors([`فایل خوانده نشد: ${error instanceof Error ? error.message : 'خطای نامشخص'}`]);
+      });
+  }, []);
+
   const apply = (): void => {
     if (issues.length > 0) {
       setSave({ kind: 'error', message: 'پیش از اعمال، خطاهای اعتبارسنجی را رفع کن.' });
@@ -165,13 +198,53 @@ export function StudioApp(): React.ReactElement {
   const preview = selectedScene === null ? null : getScenePresentation(selectedScene);
 
   return (
-    <div className="studio">
+    <div
+      className={`studio${dragging ? ' is-dragging' : ''}`}
+      onDragOver={(event) => {
+        // Only react to files, so dragging text inside the page still works.
+        if (event.dataTransfer.types.includes('Files')) {
+          event.preventDefault();
+          setDragging(true);
+        }
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget === event.target) {
+          setDragging(false);
+        }
+      }}
+      onDrop={(event) => {
+        if (!event.dataTransfer.types.includes('Files')) {
+          return;
+        }
+        event.preventDefault();
+        setDragging(false);
+        const file = event.dataTransfer.files[0];
+        if (file !== undefined) {
+          importFile(file);
+        }
+      }}
+    >
       <header className="studio__bar">
         <h1 className="studio__title">کارگاه داستان — آخرین سلول</h1>
         <div className="studio__actions">
           <button type="button" className="primary" onClick={apply} disabled={issues.length > 0}>
             اعمال در بازی
           </button>
+          <label className="secondary file-button">
+            ورود از JSON
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file !== undefined) {
+                  importFile(file);
+                }
+                // Allow picking the same file twice in a row.
+                event.target.value = '';
+              }}
+            />
+          </label>
           <button type="button" className="secondary" onClick={exportJson}>
             خروجی JSON
           </button>
@@ -190,6 +263,19 @@ export function StudioApp(): React.ReactElement {
         </p>
       )}
 
+      {importErrors.length > 0 && (
+        <details className="issues" open>
+          <summary>
+            فایل ورودی پذیرفته نشد ({importErrors.length} خطا) — پیش‌نویس فعلی دست‌نخورده ماند
+          </summary>
+          <ul>
+            {importErrors.map((issue) => (
+              <li key={issue} dir="auto">{issue}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {issues.length > 0 && (
         <details className="issues" open>
           <summary>{issues.length} خطای اعتبارسنجی — تا رفع نشود اعمال ممکن نیست</summary>
@@ -199,6 +285,12 @@ export function StudioApp(): React.ReactElement {
             ))}
           </ul>
         </details>
+      )}
+
+      {dragging && (
+        <div className="drop-hint" aria-hidden="true">
+          فایل JSON را رها کن تا در پیش‌نویس بارگذاری شود
+        </div>
       )}
 
       <div className="studio__body">
