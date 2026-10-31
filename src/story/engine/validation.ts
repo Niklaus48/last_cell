@@ -371,6 +371,44 @@ export function validateStory(story: StoryDefinition): StoryValidationResult {
     report({ code: 'EMPTY_FIELD', path: 'endings', message: 'Story endings must be an array.' });
   }
 
+  // --- variable meta (optional, presentational) ---
+  const variableMeta: unknown = story.variableMeta;
+  if (variableMeta !== undefined) {
+    if (typeof variableMeta !== 'object' || variableMeta === null || Array.isArray(variableMeta)) {
+      report({
+        code: 'EMPTY_FIELD',
+        path: 'variableMeta',
+        message: 'variableMeta must be an object of variable → { label }.',
+      });
+    } else {
+      const declared: Readonly<Record<string, unknown>> = story.initialVariables ?? {};
+      for (const [variable, meta] of Object.entries(variableMeta as Record<string, unknown>)) {
+        const path = `variableMeta.${variable}`;
+        if (!(variable in declared)) {
+          // A label for a variable nobody declared is a typo, not a feature.
+          report({
+            code: 'INVALID_CONDITION',
+            path,
+            message: `variableMeta names variable "${variable}" which initialVariables does not declare.`,
+          });
+          continue;
+        }
+        if (typeof meta !== 'object' || meta === null || Array.isArray(meta)) {
+          report({ code: 'INVALID_CONDITION', path, message: 'Variable meta must be an object.' });
+          continue;
+        }
+        const label = (meta as Record<string, unknown>)['label'];
+        if (typeof label !== 'string' || label.trim() === '') {
+          report({
+            code: 'EMPTY_FIELD',
+            path: `${path}.label`,
+            message: 'Variable meta needs a non-empty label.',
+          });
+        }
+      }
+    }
+  }
+
   // --- scenes ---
   const sceneIds = new Set<string>();
   scenes.forEach((scene, index) => {

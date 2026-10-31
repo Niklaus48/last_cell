@@ -8,6 +8,13 @@ export * from './types';
 export { STATE_SCHEMA_VERSION } from './types';
 
 export { evaluateCondition } from './conditions';
+export { explainCondition, explainChoices } from './availability';
+export type {
+  ChoiceAvailability,
+  ConditionExplanation,
+  EvaluatedRequirement,
+  UnmetRequirement,
+} from './availability';
 export type { ConditionContext } from './conditions';
 
 export { applyEffects } from './effects';

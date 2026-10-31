@@ -42,6 +42,7 @@ import {
 } from '../ui/messages';
 import { useTimedDecision, type ActiveTimedDecision, type TimedDecisionExpiry } from './useTimedDecision';
 import { useNarrationFlow, type NarrationFlowState } from './useNarrationFlow';
+import type { ChoiceAvailability, StateChangeSummary, VariableMeta } from '../story/engine';
 import { getSceneReadingPauseMs } from '../story/content/pack';
 import type { NarrationTiming } from './narrationFlow';
 
@@ -74,6 +75,23 @@ export interface StorySession {
   readonly flow: NarrationFlowState;
   /** Identity of the current session; a new value restarts scene audio. */
   readonly sessionEpoch: number;
+  /**
+   * Every choice of the current scene, including the ones the player cannot take,
+   * with the requirements behind them. `choices[].available` always agrees with
+   * the engine, so the UI can show a locked option with a reason instead of
+   * silently hiding it.
+   */
+  readonly choiceAvailability: readonly ChoiceAvailability[];
+  /** Player-facing names for the current story's variables. */
+  readonly variableMeta: Readonly<Record<string, VariableMeta>>;
+  /** Current variable values of the live run (empty when nothing is playable). */
+  readonly variables: Readonly<Record<string, number | string | boolean>>;
+  /** What the last taken choice actually changed, for player feedback. */
+  readonly lastChanges: StateChangeSummary | null;
+  /** Label of the choice that produced `lastChanges`, for the notice heading. */
+  readonly lastChoiceLabel: string | null;
+  /** Hides the change notice once the player has read it. */
+  readonly dismissChanges: () => void;
   /** Whether a resume-able local save exists (validated, not just present). */
   readonly saveAvailability: SaveAvailability;
   /** False when the browser refuses local storage entirely. */
@@ -138,6 +156,13 @@ export function useStorySession(
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback | null>(null);
   /** Identity of the current session; a new value restarts any countdown. */
   const [sessionEpoch, setSessionEpoch] = useState(0);
+  /**
+   * What the last transition changed. Deliberately presentation state: it is not
+   * persisted and never replayed — it is a notice about something that already
+   * happened to `StoryState`, not part of the run.
+   */
+  const [lastChanges, setLastChanges] = useState<StateChangeSummary | null>(null);
+  const [lastChoiceLabel, setLastChoiceLabel] = useState<string | null>(null);
   const [saveAvailability, setSaveAvailability] = useState<SaveAvailability>(() => {
     if (storage === null) {
       return { status: 'none' };
@@ -152,6 +177,12 @@ export function useStorySession(
     () => (playableState === null ? [] : engine.getAvailableChoices(playableState)),
     [engine, playableState],
   );
+
+  const choiceAvailability = useMemo(
+    () => (playableState === null ? [] : engine.getChoiceAvailability(playableState)),
+    [engine, playableState],
+  );
+  const variableMeta = useMemo(() => engine.getVariableMeta(), [engine]);
 
   const flow = useNarrationFlow({
     state: playableState,
@@ -224,6 +255,12 @@ export function useStorySession(
         consumedRef.current = state;
         setLastError(null);
         setTransitionCount((count) => count + 1);
+        // `result.changes` is the engine's own diff of this transition; the notice
+        // the player sees is that diff, not a second calculation.
+        setLastChanges(result.changes);
+        setLastChoiceLabel(
+          engine.getChoices(state).find((choice) => choice.id === choiceId)?.label ?? null,
+        );
         setSession({ phase: 'playing', state: result.state });
 
         // Only scenes whose content declares a checkpoint are snapshotted.
@@ -249,9 +286,17 @@ export function useStorySession(
     [engine, session, flow.phase],
   );
 
+  /** Clears the change notice (e.g. after the player has read it). */
+  const dismissChanges = useCallback(() => {
+    setLastChanges(null);
+    setLastChoiceLabel(null);
+  }, []);
+
   const start = useCallback(() => {
     const initial = engine.start();
     consumedRef.current = null;
+    setLastChanges(null);
+    setLastChoiceLabel(null);
     setSessionEpoch((epoch) => epoch + 1);
     setSession({ phase: 'playing', state: initial });
     setLastError(null);
@@ -314,6 +359,8 @@ export function useStorySession(
     }
 
     consumedRef.current = null;
+    setLastChanges(null);
+    setLastChoiceLabel(null);
     setSessionEpoch((epoch) => epoch + 1);
     setLastError(null);
     setTransitionCount((count) => count + 1);
@@ -322,6 +369,8 @@ export function useStorySession(
 
   const restart = useCallback(() => {
     consumedRef.current = null;
+    setLastChanges(null);
+    setLastChoiceLabel(null);
     setSessionEpoch((epoch) => epoch + 1);
     setSession({ phase: 'title' });
     setLastError(null);
@@ -374,6 +423,8 @@ export function useStorySession(
     }
 
     consumedRef.current = null;
+    setLastChanges(null);
+    setLastChoiceLabel(null);
     setSessionEpoch((epoch) => epoch + 1);
     setLastError(null);
     setTransitionCount((count) => count + 1);
@@ -397,6 +448,12 @@ export function useStorySession(
     timedDecision,
     flow,
     sessionEpoch,
+    choiceAvailability,
+    variableMeta,
+    variables: playableState?.variables ?? {},
+    lastChanges,
+    lastChoiceLabel,
+    dismissChanges,
     saveAvailability,
     storageAvailable: storage !== null,
     saveFeedback,

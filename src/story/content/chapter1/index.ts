@@ -10,6 +10,7 @@ import type { StoryDefinition } from '../../engine';
 import { chapter1Checkpoints, chapter1Endings, chapter1Failures } from './endings';
 import { CHAPTER1_SCENE, chapter1Clues } from './ids';
 import { finaleScenes } from './scenes.finale';
+import { chapter1VariableMeta } from './variables';
 import { onsetScenes } from './scenes.onset';
 import { routeScenes } from './scenes.routes';
 
@@ -42,6 +43,7 @@ export const chapter1Story: StoryDefinition = {
   title: 'فصل اول — شش ماه سکوت',
   initialSceneId: CHAPTER1_SCENE.cellDawn,
   initialVariables: chapter1InitialVariables,
+  variableMeta: chapter1VariableMeta,
   clues: chapter1Clues,
   checkpoints: chapter1Checkpoints,
   failures: chapter1Failures,

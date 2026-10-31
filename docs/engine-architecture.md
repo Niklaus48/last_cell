@@ -360,6 +360,19 @@ fall-back, and is spent by both), `strangerContact` (gates the telephone and the
 alternative) and `criticalMistakes` (Ending C ceiling). There is no score and no ending keyed on a
 clue count.
 
+**Conditions are visible to the player.** `engine.getChoiceAvailability(state)` returns every declared
+choice of the scene with `available`, the full list of `requirements` (with their current values) and
+the subset that is `unmet`. The UI uses it to show a locked option *instead of hiding it*, with the
+requirement spelled out («شک نگهبان‌ها باید کمتر یا برابر با ۱ باشد؛ الان ۳ است»). An agreement test
+asserts `available` matches `isChoiceAvailable` on every scene of a real playthrough, so the
+explanation can never drift from the rule. Wording lives in `src/ui/stateText.ts`; the engine only
+reports data.
+
+**Variable labels are content.** `StoryDefinition.variableMeta` maps a variable to `{ label, hint }`,
+validated against `initialVariables` (a label for an undeclared variable is a story error). The UI
+shows the state panel from that map, so no component hard-codes a variable name and a studio pack can
+name its own variables.
+
 **Ending gating.** A (ambiguous truth) is the unconditional path — reachable with zero clues.
 B (contradictory dossier) requires the specific `death_record_contradiction` clue. C (possible
 connection) requires that clue *plus* one corroborating clue, an open line to the stranger

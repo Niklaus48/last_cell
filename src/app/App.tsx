@@ -12,7 +12,8 @@ import type { NarrationFlowState } from './useNarrationFlow';
 import type { SaveAvailability, SaveStorage } from '../persistence';
 import { getScenePresentation } from '../presentation';
 import { readMuted, writeMuted } from '../ui/audio/mute';
-import type { SaveFeedback } from './useStorySession';
+import type { SaveFeedback, StorySession } from './useStorySession';
+import { clueLabelsFrom } from '../ui/components/changeNoticeModel';
 import { SAVE_INVALID_HINT, SAVE_NONE_MESSAGE, SAVE_STORAGE_DISABLED_HINT } from '../ui/messages';
 import { TitleScreen } from '../ui/screens/TitleScreen';
 import { GameScreen } from '../ui/screens/GameScreen';
@@ -45,6 +46,12 @@ export function App({ storyKey = DEFAULT_STORY_KEY, storage }: AppProps = {}): R
     });
   }, []);
 
+  // Clue labels come from the story data, never from a list kept in the UI.
+  const clueLabels = useMemo(
+    () => clueLabelsFrom(session.engine.story.clues ?? []),
+    [session.engine],
+  );
+
   const resumeNote = describeSave(session.storageAvailable, session.saveAvailability);
 
   if (session.session.phase === 'title') {
@@ -73,6 +80,13 @@ export function App({ storyKey = DEFAULT_STORY_KEY, storage }: AppProps = {}): R
       sceneEpoch={session.sessionEpoch}
       muted={muted}
       onToggleMuted={toggleMuted}
+      choiceAvailability={session.choiceAvailability}
+      variableMeta={session.variableMeta}
+      variables={session.variables}
+      lastChanges={session.lastChanges}
+      lastChoiceLabel={session.lastChoiceLabel}
+      onDismissChanges={session.dismissChanges}
+      clueLabels={clueLabels}
       isCommitting={session.isCommitting}
       storageAvailable={session.storageAvailable}
       hasSave={session.saveAvailability.status === 'valid'}
@@ -111,6 +125,15 @@ interface PlaySessionProps {
   readonly sceneEpoch: number;
   readonly muted: boolean;
   readonly onToggleMuted: () => void;
+  /** Availability of every choice, including the locked ones and their reasons. */
+  readonly choiceAvailability: StorySession['choiceAvailability'];
+  readonly variableMeta: StorySession['variableMeta'];
+  readonly variables: StorySession['variables'];
+  readonly lastChanges: StorySession['lastChanges'];
+  readonly lastChoiceLabel: StorySession['lastChoiceLabel'];
+  readonly onDismissChanges: StorySession['dismissChanges'];
+  /** Clue id → label for the change notice. */
+  readonly clueLabels: Readonly<Record<string, string>>;
   readonly isCommitting: boolean;
   readonly storageAvailable: boolean;
   readonly hasSave: boolean;
@@ -133,6 +156,13 @@ function PlaySession({
   sceneEpoch,
   muted,
   onToggleMuted,
+  choiceAvailability,
+  variableMeta,
+  variables,
+  lastChanges,
+  lastChoiceLabel,
+  onDismissChanges,
+  clueLabels,
   isCommitting,
   storageAvailable,
   hasSave,
@@ -181,6 +211,13 @@ function PlaySession({
       checkpointLabel={checkpoint?.label ?? null}
       timedDecision={timedDecision}
       flow={flow}
+      choiceAvailability={choiceAvailability}
+      variableMeta={variableMeta}
+      variables={variables}
+      lastChanges={lastChanges}
+      lastChoiceLabel={lastChoiceLabel}
+      onDismissChanges={onDismissChanges}
+      clueLabels={clueLabels}
       sceneEpoch={sceneEpoch}
       muted={muted}
       onToggleMuted={onToggleMuted}

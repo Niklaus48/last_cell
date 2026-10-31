@@ -189,6 +189,172 @@ kbd {
   text-align: center;
 }
 
+/* ---------- Choices: body, conditions, locked options ---------- */
+.choice-button__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.choice-button__condition {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.choice-button__condition--unmet {
+  color: var(--color-warning, #d8a25a);
+}
+
+/* A locked option is information, not a dead button: readable, never clickable. */
+.choice-button--locked {
+  background: transparent;
+  border-style: dashed;
+  cursor: not-allowed;
+  opacity: 0.82;
+}
+
+.choice-button--locked .choice-button__index {
+  border-style: dashed;
+}
+
+.locked-choices {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-start: var(--space-4);
+}
+
+.locked-choices__heading {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.choice-list--locked {
+  gap: var(--space-2);
+}
+
+/* ---------- State panel ---------- */
+.state-panel {
+  margin-inline: auto;
+  width: 100%;
+  padding-inline: var(--space-4);
+  margin-block-end: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.state-panel__summary {
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding-block: var(--space-2);
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2rem;
+}
+
+.state-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.state-panel__summary::before {
+  content: '▸';
+  font-size: 0.7em;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.state-panel[open] .state-panel__summary::before {
+  transform: rotate(90deg);
+}
+
+.state-panel__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-accent, #c8873c);
+}
+
+.state-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.state-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.state-row__label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.state-row__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.state-row__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.state-row--up .state-row__value {
+  color: var(--color-warning, #d8a25a);
+}
+
+.state-row--down .state-row__value {
+  color: var(--color-success, #6ea37a);
+}
+
+/* ---------- Change notice ---------- */
+.change-notice {
+  margin-block: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 3px solid var(--color-accent, #c8873c);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  animation: fade-in var(--duration-medium) var(--ease-out) both;
+}
+
+.change-notice__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.change-notice__title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.change-notice__list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  font-size: var(--font-size-sm);
+}
+
+.change-notice__item--clue {
+  color: var(--color-accent, #c8873c);
+}
+
 /* ---------- Narration ---------- */
 .narration {
   display: grid;
@@ -561,6 +727,7 @@ kbd {
 
 /* UI always paints above the backdrop. */
 .screen--game > .game-topbar,
+.screen--game > .state-panel,
 .screen--game > .game-content,
 .screen--game > .confirm-row,
 .screen--game > .save-notice,

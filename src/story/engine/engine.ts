@@ -12,6 +12,7 @@
  * gameplay outcome (invalid choice, unavailable choice, failed effect, bad
  * snapshot) is reported through a typed result instead.
  */
+import { explainChoices, type ChoiceAvailability } from './availability';
 import { evaluateCondition } from './conditions';
 import { applyEffects } from './effects';
 import { deriveChoiceSequence, deriveVisitedSceneIds, type SceneTransitionStep, deriveSceneTransitions } from './history';
@@ -41,6 +42,7 @@ import {
   type SceneDefinition,
   type SceneId,
   type StateChangeSummary,
+  type VariableMeta,
   type StateRestoreResult,
   type StoryDefinition,
   type StoryEngineError,
@@ -80,6 +82,15 @@ export interface StoryEngine {
   getAvailableChoices(state: StoryState): readonly ChoiceDefinition[];
   /** True when `choiceId` is currently selectable in the current scene. */
   isChoiceAvailable(state: StoryState, choiceId: ChoiceId): boolean;
+  /**
+   * Every declared choice of the current scene with its availability *and* the
+   * requirements that fail, so the UI can show a locked option together with a
+   * reason instead of hiding it. `available` always agrees with
+   * `getAvailableChoices`.
+   */
+  getChoiceAvailability(state: StoryState): readonly ChoiceAvailability[];
+  /** Player-facing labels declared by the story, keyed by variable. */
+  getVariableMeta(): Readonly<Record<string, VariableMeta>>;
 
   // --- outcomes ------------------------------------------------------------
   /** The ending record when the run has finished, otherwise `null`. */
@@ -198,6 +209,20 @@ export function createStoryEngine(input: StoryDefinition): StoryEngine {
 
   const isChoiceAvailable = (state: StoryState, choiceId: ChoiceId): boolean =>
     getAvailableChoices(state).some((choice) => choice.id === choiceId);
+
+  const getChoiceAvailability = (state: StoryState): readonly ChoiceAvailability[] =>
+    explainChoices(
+      getChoices(state),
+      {
+        variables: state.variables,
+        visitedSceneIds: deriveVisitedSceneIds(state.history),
+        discoveredClueIds: state.discoveredClueIds,
+      },
+      state.progress.status === 'playing',
+    );
+
+  const getVariableMeta = (): Readonly<Record<string, VariableMeta>> =>
+    story.variableMeta ?? {};
 
   const getEnding = (state: StoryState): EndingDefinition | null => {
     if (state.progress.status !== 'ended') {
@@ -571,6 +596,8 @@ export function createStoryEngine(input: StoryDefinition): StoryEngine {
     getChoices,
     getAvailableChoices,
     isChoiceAvailable,
+    getChoiceAvailability,
+    getVariableMeta,
     getEnding,
     getFailure,
     getRecoveryTarget,

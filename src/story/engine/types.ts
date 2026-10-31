@@ -177,6 +177,20 @@ export interface FailureDefinition {
   readonly recovery?: RecoveryTarget;
 }
 
+/**
+ * Player-facing name of a story variable.
+ *
+ * The engine only compares variables; it never invents text. The label and hint
+ * live in the story so that a different chapter (or a pack written in the studio)
+ * can name its own variables — and so the UI never hard-codes a variable name.
+ */
+export interface VariableMeta {
+  /** Short label, e.g. «شک نگهبان‌ها». */
+  readonly label: string;
+  /** One sentence on what the variable means for the player. */
+  readonly hint?: string;
+}
+
 export interface StoryDefinition {
   readonly id: string;
   readonly title: string;
@@ -193,6 +207,12 @@ export interface StoryDefinition {
   readonly failures?: readonly FailureDefinition[];
   /** Optional starting values; omitted variables are simply absent. */
   readonly initialVariables?: StoryVariables;
+  /**
+   * Optional player-facing labels for the variables above. Purely presentational:
+   * nothing in the engine reads them, and a variable without meta is shown by its
+   * id rather than by an invented name.
+   */
+  readonly variableMeta?: Readonly<Record<VariableKey, VariableMeta>>;
 }
 
 /**

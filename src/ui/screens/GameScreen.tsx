@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { ChoiceList } from '../components/ChoiceList';
+import { StatePanel } from '../components/StatePanel';
+import { ChangeNotice } from '../components/ChangeNotice';
+import { changeDirection } from '../stateText';
 import { NarrationBlock } from '../components/NarrationBlock';
 import { TimedDecisionBanner } from '../components/TimedDecisionBanner';
 import { toPersianDigits } from '../format';
 import { toPersianError } from '../messages';
-import type { StoryEngineError } from '../../story/engine';
+import type { ChoiceAvailability, StateChangeSummary, StoryEngineError, VariableMeta } from '../../story/engine';
 import type { SceneViewModel } from '../../story/state/sceneView';
 import type { ScenePresentation } from '../../presentation';
 import { SceneBackdrop } from '../scene/SceneBackdrop';
@@ -26,6 +29,18 @@ interface GameScreenProps {
   readonly timedDecision: ActiveTimedDecision | null;
   /** Narration stage of the scene: choices exist only in `choices_available`. */
   readonly flow: NarrationFlowState;
+  /** Every choice of the scene, available or not, with the reasons behind it. */
+  readonly choiceAvailability: readonly ChoiceAvailability[];
+  /** Player-facing variable names declared by the story. */
+  readonly variableMeta: Readonly<Record<string, VariableMeta>>;
+  /** Live variable values of the run. */
+  readonly variables: Readonly<Record<string, number | string | boolean>>;
+  /** What the previous choice changed, shown once as a notice. */
+  readonly lastChanges: StateChangeSummary | null;
+  readonly lastChoiceLabel: string | null;
+  readonly onDismissChanges: () => void;
+  /** Clue id → label, for naming a discovery in the notice. */
+  readonly clueLabels: Readonly<Record<string, string>>;
   /** Session identity; a new value restarts the scene's audio. */
   readonly sceneEpoch: number;
   readonly muted: boolean;
@@ -49,6 +64,13 @@ export function GameScreen({
   checkpointLabel,
   timedDecision,
   flow,
+  choiceAvailability,
+  variableMeta,
+  variables,
+  lastChanges,
+  lastChoiceLabel,
+  onDismissChanges,
+  clueLabels,
   sceneEpoch,
   muted,
   onToggleMuted,
@@ -111,6 +133,19 @@ export function GameScreen({
         </span>
       </div>
 
+      <StatePanel
+        variables={variables}
+        meta={variableMeta}
+        changes={
+          lastChanges === null
+            ? []
+            : lastChanges.variableChanges.map((change) => ({
+                variable: change.variable,
+                direction: changeDirection(change),
+              }))
+        }
+      />
+
       {confirmOverwrite && (
         <div className="confirm-row" role="group" aria-label="تأیید رونویسی ذخیره">
           <p className="confirm-row__text">ذخیرهٔ قبلی رونویسی شود؟</p>
@@ -151,6 +186,15 @@ export function GameScreen({
       )}
 
       <div className="game-content">
+        {lastChanges !== null && (
+          <ChangeNotice
+            notice={{ choiceLabel: lastChoiceLabel, variableLabels: variableMeta, clueLabels }}
+            changes={lastChanges}
+            meta={variableMeta}
+            onDismiss={onDismissChanges}
+          />
+        )}
+
         <NarrationBlock
           title={view.scene.title}
           paragraphs={view.scene.narration}
@@ -181,7 +225,13 @@ export function GameScreen({
         )}
 
         {flow.choicesEnabled && (
-          <ChoiceList choices={view.choices} onSelect={onSelect} disabled={isCommitting} />
+          <ChoiceList
+            choices={choiceAvailability}
+            onSelect={onSelect}
+            disabled={isCommitting}
+            variableLabels={variableMeta}
+            clueLabels={clueLabels}
+          />
         )}
       </div>
     </main>

@@ -68,7 +68,7 @@ Quality gates:
 ```bash
 npm run typecheck  # tsc -b, strict mode, zero errors expected
 npm run lint       # eslint .
-npm run test       # vitest run (396 tests)
+npm run test       # vitest run (442 tests)
 npm run verify     # typecheck + lint + test + build in one go
 ```
 
@@ -240,6 +240,21 @@ A scene is a short, explicit sequence rather than "narration plus buttons":
   one, within declared bounds, so a long scene is never rushed. The numbers live in one typed
   configuration (`NARRATION_TIMING` in `src/app/narrationFlow.ts`), which is also where future
   narration *audio* would hook in.
+
+### Conditions, state and feedback
+
+A choice may depend on story state (`compareVariable`, `clueDiscovered`, …). The game never hides
+that from the player:
+
+* every option that has a condition shows it, marked met or unmet, with the current value;
+* an option whose condition fails is **still listed, disabled**, under «راه‌هایی که اکنون بسته‌اند»,
+  with the requirement that fails — the player learns what the world asked of them;
+* after a choice that changes state, a notice reports exactly what moved
+  («↑ شک نگهبان‌ها +۲ — اکنون ۳»), plus any clue discovered;
+* the «وضعیت کیان» panel lists the eight variables by their story-declared labels at any moment.
+
+Nothing here is a second source of truth: the engine's `getChoiceAvailability` decides, `stateText.ts`
+only puts it into Persian, and the engine still refuses any locked choice that reaches it.
 
 ### The dev fixture
 
