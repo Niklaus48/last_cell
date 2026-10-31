@@ -70,6 +70,30 @@ button { font: inherit; cursor: pointer; border-radius: 8px; }
 .tree-scroll { overflow: auto; max-height: 420px; border-radius: 8px; background: var(--studio-panel-2); }
 .tree-canvas { display: block; }
 .tree-edge { color: #4a5a6d; }
+/* Conditional edges say so on their own: dashed, and red when already shut at
+   the story's starting values. */
+.tree-edge--gated { color: #c8873c; }
+.tree-edge--closed { color: #b4544a; }
+.tree-edge__effect { fill: #7fb98a; }
+
+.tree-node.is-timed .tree-node__box { stroke: #7a6cae; stroke-dasharray: 6 3; }
+
+.tree-node__badges {
+  display: flex; gap: 4px; margin-top: 2px; pointer-events: none;
+}
+.badge {
+  font-size: 9px; line-height: 1.4; padding: 0 4px; border-radius: 999px;
+  border: 1px solid var(--studio-border); color: var(--studio-muted);
+}
+.badge--gated { border-color: #c8873c; color: #e3b483; }
+.badge--effect { border-color: #4f7f5a; color: #9cc9a7; }
+
+.tree-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-top: 6px; font-size: 10.5px; color: var(--studio-muted);
+}
+.tree-legend__item { display: inline-flex; align-items: center; gap: 4px; }
+.tree-legend__count { margin-inline-start: auto; color: var(--studio-text); }
 .tree-edge--ending { color: #4f7f5a; }
 .tree-edge--failure { color: #7f4f4f; }
 .tree-node__box { fill: #182130; stroke: #2e3d50; stroke-width: 1.5; }

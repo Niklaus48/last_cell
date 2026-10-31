@@ -22,6 +22,7 @@ import type {
 import { chapter1Story } from '../story/content/chapter1';
 import { EMPTY_PACK, type ContentPack, type SceneAudio } from '../story/content/pack/types';
 import { validateContentPack } from '../story/content/pack/validate';
+import { explainCondition } from '../story/engine';
 import {
   SCENE_PRESENTATION_OVERRIDES,
 } from '../presentation/scenePresentation';
@@ -580,6 +581,12 @@ export interface TreeNode {
   readonly depth: number;
   readonly x: number;
   readonly y: number;
+  /** How many of this scene's choices carry an availability rule. */
+  readonly gatedChoices: number;
+  /** How many choices of this scene change state when taken. */
+  readonly choicesWithEffects: number;
+  /** True when the scene declares a timed decision. */
+  readonly timed: boolean;
 }
 
 export interface TreeEdge {
@@ -588,15 +595,34 @@ export interface TreeEdge {
   readonly choiceId: string;
   readonly label: string;
   readonly kind: 'transition' | 'ending' | 'failure';
+  /** The choice has an availability rule. */
+  readonly gated: boolean;
+  /** How many state effects the choice applies. */
+  readonly effects: number;
+  /**
+   * Whether the rule holds with the story's *starting* values — i.e. can the
+   * player take this route on the first turn. A conditional edge that is already
+   * shut at the start is the most likely content mistake, so the graph shows it.
+   * Always true for an edge with no condition.
+   */
+  readonly openAtStart: boolean;
 }
 
 export interface StoryTree {
   readonly nodes: readonly TreeNode[];
   readonly edges: readonly TreeEdge[];
+  /** Totals for the legend under the graph. */
+  readonly stats: {
+    readonly gatedEdges: number;
+    readonly closedAtStart: number;
+    readonly effectfulEdges: number;
+    readonly timedScenes: number;
+    readonly unreachableScenes: number;
+  };
 }
 
 const COLUMN_WIDTH = 250;
-const ROW_HEIGHT = 96;
+const ROW_HEIGHT = 104;
 
 /**
  * Layered layout: the starting scene on the right (RTL), each transition moving
@@ -604,8 +630,26 @@ const ROW_HEIGHT = 96;
  * Deterministic (breadth-first, story order) so the graph does not jump around
  * between renders.
  */
+/** Would this choice's condition hold with the story's starting values? */
+function openAtStart(
+  choice: ChoiceDefinition,
+  initialVariables: Readonly<Record<string, StateValue>>,
+): boolean {
+  if (choice.condition === undefined) {
+    return true;
+  }
+  // Visited scenes and discovered clues are empty at the start by definition, so
+  // the fresh-run context is exactly this.
+  return explainCondition(choice.condition, {
+    variables: initialVariables,
+    visitedSceneIds: [],
+    discoveredClueIds: [],
+  }).met;
+}
+
 export function buildTree(draft: StudioDraft): StoryTree {
   const story = draft.story;
+  const initialVariables = story.initialVariables ?? {};
   const nodes: TreeNode[] = [];
   const edges: TreeEdge[] = [];
   const placed = new Set<string>();
@@ -634,7 +678,17 @@ export function buildTree(draft: StudioDraft): StoryTree {
     const depth = depthOf.get(sceneId) ?? 0;
     if (!placed.has(sceneId)) {
       placed.add(sceneId);
-      nodes.push({ id: sceneId, kind: 'scene', title: scene.title, depth, x: 0, y: 0 });
+      nodes.push({
+        id: sceneId,
+        kind: 'scene',
+        title: scene.title,
+        depth,
+        x: 0,
+        y: 0,
+        gatedChoices: scene.choices.filter((choice) => choice.condition !== undefined).length,
+        choicesWithEffects: scene.choices.filter((choice) => (choice.effects?.length ?? 0) > 0).length,
+        timed: scene.timedDecision !== undefined,
+      });
     }
 
     for (const choice of scene.choices) {
@@ -646,6 +700,9 @@ export function buildTree(draft: StudioDraft): StoryTree {
           choiceId: choice.id,
           label: choice.label,
           kind: 'transition',
+          gated: choice.condition !== undefined,
+          effects: choice.effects?.length ?? 0,
+          openAtStart: openAtStart(choice, initialVariables),
         });
         if (!depthOf.has(outcome.targetSceneId)) {
           depthOf.set(outcome.targetSceneId, depth + 1);
@@ -659,6 +716,9 @@ export function buildTree(draft: StudioDraft): StoryTree {
           choiceId: choice.id,
           label: choice.label,
           kind: outcome.type,
+          gated: choice.condition !== undefined,
+          effects: choice.effects?.length ?? 0,
+          openAtStart: openAtStart(choice, initialVariables),
         });
         if (!placed.has(key)) {
           placed.add(key);
@@ -670,6 +730,9 @@ export function buildTree(draft: StudioDraft): StoryTree {
             depth: depth + 1,
             x: 0,
             y: 0,
+            gatedChoices: 0,
+            choicesWithEffects: 0,
+            timed: false,
           });
         }
       }
@@ -688,6 +751,9 @@ export function buildTree(draft: StudioDraft): StoryTree {
         depth: orphanDepth,
         x: 0,
         y: 0,
+        gatedChoices: scene.choices.filter((choice) => choice.condition !== undefined).length,
+        choicesWithEffects: scene.choices.filter((choice) => (choice.effects?.length ?? 0) > 0).length,
+        timed: scene.timedDecision !== undefined,
       });
     }
   }
@@ -717,5 +783,15 @@ export function buildTree(draft: StudioDraft): StoryTree {
     });
   }
 
-  return { nodes: laidOut, edges };
+  return {
+    nodes: laidOut,
+    edges,
+    stats: {
+      gatedEdges: edges.filter((edge) => edge.gated).length,
+      closedAtStart: edges.filter((edge) => edge.gated && !edge.openAtStart).length,
+      effectfulEdges: edges.filter((edge) => edge.effects > 0).length,
+      timedScenes: laidOut.filter((node) => node.timed).length,
+      unreachableScenes: laidOut.filter((node) => node.kind === 'scene' && node.depth === orphanDepth).length,
+    },
+  };
 }

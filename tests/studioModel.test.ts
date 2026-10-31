@@ -342,3 +342,106 @@ describe('variables panel model', () => {
     expect(reimported.draft.story.variableMeta?.['composure']?.label).toBe('آرامش');
   });
 });
+
+describe('rules shown on the tree', () => {
+  it('marks an edge as conditional only when its choice has a condition', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    const tree = build(createDraft());
+    const gated = tree.edges.filter((edge) => edge.gated);
+    expect(gated.length).toBeGreaterThan(0);
+    expect(gated.length).toBeLessThan(tree.edges.length);
+
+    // Independently count conditional choices in the content and compare.
+    const conditionalChoices = chapter1Story.scenes.reduce(
+      (total, scene) => total + scene.choices.filter((choice) => choice.condition !== undefined).length,
+      0,
+    );
+    expect(gated).toHaveLength(conditionalChoices);
+  });
+
+  it('counts the effects of the choice behind each edge', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    const tree = build(createDraft());
+    const effectful = tree.edges.filter((edge) => edge.effects > 0);
+    expect(effectful.length).toBeGreaterThan(0);
+    expect(tree.stats.effectfulEdges).toBe(effectful.length);
+    for (const edge of effectful) {
+      const scene = chapter1Story.scenes.find((entry) => entry.id === edge.from);
+      const choice = scene?.choices.find((entry) => entry.id === edge.choiceId);
+      expect(edge.effects).toBe(choice?.effects?.length ?? 0);
+    }
+  });
+
+  it('knows which conditional edges are already shut with the starting values', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    const tree = build(createDraft());
+
+    // `slide-into-the-alcove` needs guardSuspicion <= 1, and the story starts at 0,
+    // so that route is open on the first turn…
+    const alcove = tree.edges.find((edge) => edge.choiceId === 'slide-into-the-alcove');
+    expect(alcove?.gated).toBe(true);
+    expect(alcove?.openAtStart).toBe(true);
+
+    // …while the ending that needs a discovered clue is not.
+    const closed = tree.edges.filter((edge) => edge.gated && !edge.openAtStart);
+    expect(closed.length).toBeGreaterThan(0);
+    expect(tree.stats.closedAtStart).toBe(closed.length);
+    // Every closed edge must be a conditional one, by definition.
+    expect(closed.every((edge) => edge.gated)).toBe(true);
+  });
+
+  it('an unconditional edge is always open at the start', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    const tree = build(createDraft());
+    expect(tree.edges.filter((edge) => !edge.gated).every((edge) => edge.openAtStart)).toBe(true);
+  });
+
+  it('follows a condition edited in the studio', async () => {
+    const { buildTree: build, setChoiceCondition } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    if (scene === undefined || choice === undefined) return;
+
+    const closed = setChoiceCondition(draft, scene.id, choice.id, {
+      kind: 'compareVariable',
+      variable: 'composure',
+      operator: 'gte',
+      value: 99,
+    });
+    const edge = build(closed).edges.find(
+      (candidate) => candidate.from === scene.id && candidate.choiceId === choice.id,
+    );
+    expect(edge?.gated).toBe(true);
+    expect(edge?.openAtStart).toBe(false);
+
+    const opened = setChoiceCondition(draft, scene.id, choice.id, null);
+    const back = build(opened).edges.find(
+      (candidate) => candidate.from === scene.id && candidate.choiceId === choice.id,
+    );
+    expect(back?.gated).toBe(false);
+    expect(back?.openAtStart).toBe(true);
+  });
+
+  it('counts gated and effectful choices on each node, and the timed scenes', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    const tree = build(createDraft());
+
+    const timedScenes = chapter1Story.scenes.filter((scene) => scene.timedDecision !== undefined);
+    expect(tree.stats.timedScenes).toBe(timedScenes.length);
+    for (const node of tree.nodes.filter((entry) => entry.kind === 'scene')) {
+      const scene = chapter1Story.scenes.find((entry) => entry.id === node.id);
+      if (scene === undefined) continue;
+      expect(node.gatedChoices).toBe(scene.choices.filter((choice) => choice.condition !== undefined).length);
+      expect(node.choicesWithEffects).toBe(
+        scene.choices.filter((choice) => (choice.effects?.length ?? 0) > 0).length,
+      );
+      expect(node.timed).toBe(scene.timedDecision !== undefined);
+    }
+  });
+
+  it('stays deterministic with the new markers', async () => {
+    const { buildTree: build } = await import('../src/studio/model');
+    expect(build(createDraft())).toEqual(build(createDraft()));
+  });
+});

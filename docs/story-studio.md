@@ -100,6 +100,24 @@ make the pack invalid, and hunting for the reference by hand is not reasonable.
 An unedited story is written to the pack as `"story": null`, so a "no edits"
 apply produces a two-line diff instead of a 40 KB copy of the content.
 
+## The graph shows the rules
+
+The tree is not just shape any more:
+
+| Marker | Meaning |
+| --- | --- |
+| solid line | an unconditional choice |
+| dashed amber line | a conditional choice, and the condition *holds at the start* |
+| dashed red line | a conditional choice that is **already shut with the story's starting values** — usually a content mistake, always worth seeing |
+| green diamond on a line | taking that choice changes state (variables or clues) |
+| `⛓ n` badge on a scene | how many of its choices are gated |
+| `◆ n` badge on a scene | how many of its choices change state |
+| purple dashed node outline | the scene has a timed decision |
+
+The legend under the graph repeats the totals (gated / shut-at-start / effectful /
+timed / unreachable) live, so the numbers follow every edit. Hovering a line gives
+its label plus the rule summary.
+
 ## Files
 
 ```
