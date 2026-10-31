@@ -128,7 +128,42 @@ kbd {
   gap: var(--space-3);
 }
 
+/*
+ * Choosing is the core gesture of the game, so it is animated in three beats
+ * that all stay in CSS and cost no frame of engine time:
+ *
+ * 1. entrance — the options arrive one after another (`--order` is the index),
+ *    so the list reads as opening up rather than popping into place;
+ * 2. press-in — while the finger is down the card sinks and lights up with the
+ *    accent colour, the recognised state of a touch button;
+ * 3. ripple — a soft glow spreads from the card while it is held.
+ *
+ * The commit itself is synchronous. Nothing waits for an animation: the
+ * transition to the announcement stage happens on the same tick, and the
+ * announcement carries the confirmation forward (`announcement-fade-in`).
+ */
+.choice-list--enter .choice-list__item {
+  animation: choice-arrive var(--duration-medium) var(--ease-out) both;
+  animation-delay: calc(var(--order, 0) * 40ms);
+  /* Staggering must never hide an option from a player who taps instantly. */
+  animation-fill-mode: both;
+}
+
+@keyframes choice-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .choice-button {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -136,25 +171,64 @@ kbd {
   min-height: var(--touch-target-lg);
   padding: var(--space-4);
   text-align: start;
-  background: var(--color-surface);
+  /* Opaque, not translucent: the options sit over a scrolling scene, and text
+     ghosting through a button makes the label hard to read. */
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     border-color var(--duration-fast) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform 90ms var(--ease-out);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .choice-button:hover:not(:disabled) {
-  background: var(--color-surface-hover);
+  background: var(--color-surface-raised-hover);
   border-color: var(--color-border-strong);
 }
 
+/* Press-in: the card gives way under the thumb and warms to the accent. */
 .choice-button:active:not(:disabled) {
-  transform: scale(0.995);
+  transform: scale(0.972);
+  background: rgb(184 118 58 / 16%);
+  border-color: var(--color-accent-strong);
+  box-shadow: 0 0 0 2px rgb(205 138 76 / 22%), inset 0 1px 14px rgb(0 0 0 / 35%);
+}
+
+/* Ripple: a radial bloom that expands while the card is held. */
+.choice-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgb(224 165 106 / 30%) 0%,
+    rgb(224 165 106 / 8%) 45%,
+    transparent 68%
+  );
+  opacity: 0;
+  transform: scale(0.55);
+  transition:
+    opacity var(--duration-fast) linear,
+    transform var(--duration-medium) var(--ease-out);
+}
+
+.choice-button:active:not(:disabled)::after {
+  opacity: 1;
+  transform: scale(1.05);
+  transition-duration: 60ms, 220ms;
+}
+
+/* Locked options are information: they never take the pressed treatment. */
+.choice-button:disabled::after {
+  content: none;
 }
 
 .choice-button:focus-visible {
@@ -320,6 +394,13 @@ kbd {
 }
 
 /* ---------- Change notice ---------- */
+/*
+ * The delta card answers "what did that decision do?" — so it is animated as a
+ * receipt: the card slides down under the top bar, then each changed value
+ * arrives on its own line, one after another. Motion carries the reading order;
+ * every line is plain text, so reduced motion (which collapses these durations
+ * globally) loses nothing.
+ */
 .change-notice {
   margin-block: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -327,14 +408,82 @@ kbd {
   border-inline-start: 3px solid var(--color-accent, #c8873c);
   border-radius: var(--radius-md);
   background: var(--color-surface);
-  animation: fade-in var(--duration-medium) var(--ease-out) both;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 28%);
+  position: relative;
+  overflow: hidden;
+  animation: notice-in var(--duration-medium) var(--ease-out) both;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * A short accent sweep marks the card as new without flashing, which would be
+ * punishing in a dark scene. `animation-fill-mode: both` keeps the resting style
+ * while the sweep is waiting its turn.
+ */
+.change-notice::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(184 118 58 / 16%), transparent 70%);
+  opacity: 0;
+  animation: notice-sweep 900ms var(--ease-out) both;
+}
+
+@keyframes notice-sweep {
+  0% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Each changed value slides in from the start edge (right, in RTL). */
+.change-notice__item {
+  animation: notice-item-in var(--duration-medium) var(--ease-out) both;
+  animation-delay: calc(90ms + var(--order, 0) * 70ms);
+}
+
+@keyframes notice-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .change-notice__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+/* The dismissal "×" stays a 44px target but does not inflate the header. */
+.change-notice__head .button--inline {
+  margin-block-start: calc(-1 * var(--space-2));
+  margin-inline-end: calc(-1 * var(--space-2));
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  flex: 0 0 auto;
 }
 
 .change-notice__title {
@@ -781,8 +930,25 @@ kbd {
   margin-block-start: var(--space-2);
   padding-block: var(--space-2);
   padding-inline: var(--space-1);
-  background: linear-gradient(180deg, rgb(7 9 12 / 0%) 0%, rgb(7 9 12 / 85%) 40%, rgb(7 9 12 / 95%) 100%);
-  backdrop-filter: blur(6px);
+  /*
+   * Opaque, with the fade carried by a shadow above it. A translucent bar let the
+   * narration print through the «ادامه» button, which read as a rendering fault
+   * rather than as a layer.
+   */
+  background: rgb(8 10 14 / 97%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* The bar is opaque, so the line it covers must dissolve rather than be cut. */
+.narration-gate::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 100%;
+  height: var(--space-7);
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(8 10 14 / 0%) 0%, rgb(8 10 14 / 96%) 92%);
 }
 
 .narration-gate__actions {

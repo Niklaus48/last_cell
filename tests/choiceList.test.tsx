@@ -134,6 +134,69 @@ describe('ChoiceList', () => {
     fireEvent.click(screen.getByRole('button', { name: /از پاگرد/ }), { detail: 1 });
     expect(onSelect).toHaveBeenCalledWith('walk-away');
   });
+
+  it('numbers the options for the staggered entrance', () => {
+    renderList([openChoice, gatedOpen]);
+
+    const list = document.querySelector('.choice-list');
+    expect(list?.className).toContain('choice-list--enter');
+
+    const items = [...document.querySelectorAll('.choice-list__item')];
+    expect(items).toHaveLength(2);
+    // `--order` becomes the animation-delay token in CSS, so it must be the
+    // visible order of the options, not their ids or a random key.
+    expect(items.map((item) => (item as HTMLElement).style.getPropertyValue('--order'))).toEqual(['0', '1']);
+  });
+
+  it('ticks the haptics once per tap when the platform offers it', () => {
+    const vibrations: number[][] = [];
+    const original = Object.getOwnPropertyDescriptor(navigator, 'vibrate');
+    Object.defineProperty(navigator, 'vibrate', {
+      configurable: true,
+      value: (pattern: number[]) => {
+        vibrations.push(pattern);
+        return true;
+      },
+    });
+
+    try {
+      const onSelect = vi.fn();
+      renderList([openChoice], onSelect);
+      fireEvent.click(screen.getByRole('button', { name: /از پاگرد/ }), { detail: 1 });
+      expect(vibrations).toHaveLength(1);
+      expect(vibrations[0]).toEqual([8]);
+      expect(onSelect).toHaveBeenCalledWith('walk-away');
+    } finally {
+      if (original) {
+        Object.defineProperty(navigator, 'vibrate', original);
+      } else {
+        Reflect.deleteProperty(navigator, 'vibrate');
+      }
+    }
+  });
+
+  it('still selects when the platform refuses to vibrate', () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, 'vibrate');
+    Object.defineProperty(navigator, 'vibrate', {
+      configurable: true,
+      value: () => {
+        throw new Error('not allowed');
+      },
+    });
+
+    try {
+      const onSelect = vi.fn();
+      renderList([openChoice], onSelect);
+      expect(() => fireEvent.click(screen.getByRole('button', { name: /از پاگرد/ }), { detail: 1 })).not.toThrow();
+      expect(onSelect).toHaveBeenCalledWith('walk-away');
+    } finally {
+      if (original) {
+        Object.defineProperty(navigator, 'vibrate', original);
+      } else {
+        Reflect.deleteProperty(navigator, 'vibrate');
+      }
+    }
+  });
 });
 
 describe('ChangeNotice', () => {
@@ -171,6 +234,101 @@ describe('ChangeNotice', () => {
       />,
     );
     expect(document.querySelector('.change-notice')?.textContent).toContain('تناقض در دفتر مردگان');
+  });
+
+  it('stagers the changed values so they read in order', () => {
+    render(
+      <ChangeNotice
+        notice={{ choiceLabel: 'در را هل بده', variableLabels: labels, clueLabels }}
+        changes={{
+          variableChanges: [
+            { variable: 'guardSuspicion', before: 1, after: 3 },
+            { variable: 'composure', before: 2, after: 1 },
+          ],
+          discoveredClueIds: ['death_record_contradiction'],
+        }}
+        meta={labels}
+        onDismiss={() => undefined}
+      />,
+    );
+
+    const items = [...document.querySelectorAll('.change-notice__item')];
+    expect(items).toHaveLength(3);
+    expect(items.map((item) => (item as HTMLElement).style.getPropertyValue('--order'))).toEqual(['0', '1', '2']);
+    // The discovery is the last beat, after the deltas.
+    expect(items[2]?.className).toContain('change-notice__item--clue');
+  });
+
+  it('closes immediately where the platform cannot animate the exit', () => {
+    const onDismiss = vi.fn();
+    render(
+      <ChangeNotice
+        notice={{ choiceLabel: 'در را هل بده', variableLabels: labels, clueLabels }}
+        changes={{ variableChanges: [{ variable: 'guardSuspicion', before: 1, after: 3 }], discoveredClueIds: [] }}
+        meta={labels}
+        onDismiss={onDismiss}
+      />,
+    );
+
+    // jsdom has no Element.animate: the dismissal must not get stuck waiting.
+    const notice = document.querySelector('.change-notice') as HTMLElement;
+    expect(typeof notice.animate).toBe('undefined');
+    fireEvent.click(within(notice).getByRole('button', { name: /بستن/ }));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the exit animation finish before reporting the dismissal', async () => {
+    const onDismiss = vi.fn();
+    let finish: () => void = () => undefined;
+    const finished = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const animate = vi.fn(() => ({ finished }));
+
+    const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'animate');
+    Object.defineProperty(HTMLElement.prototype, 'animate', { configurable: true, value: animate });
+    // jsdom ships no `matchMedia`; the exit path only needs "motion is allowed".
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+
+    try {
+      render(
+        <ChangeNotice
+          notice={{ choiceLabel: 'در را هل بده', variableLabels: labels, clueLabels }}
+          changes={{ variableChanges: [{ variable: 'guardSuspicion', before: 1, after: 3 }], discoveredClueIds: [] }}
+          meta={labels}
+          onDismiss={onDismiss}
+        />,
+      );
+
+      const notice = document.querySelector('.change-notice') as HTMLElement;
+      fireEvent.click(within(notice).getByRole('button', { name: /بستن/ }));
+
+      // Presentation must never swallow the event: the card is still on screen
+      // while it folds away, and the dismissal lands when the animation ends.
+      expect(animate).toHaveBeenCalledTimes(1);
+      expect(onDismiss).not.toHaveBeenCalled();
+
+      finish();
+      await finished;
+      await Promise.resolve();
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    } finally {
+      if (original === undefined) {
+        Reflect.deleteProperty(HTMLElement.prototype, 'animate');
+      } else {
+        Object.defineProperty(HTMLElement.prototype, 'animate', original);
+      }
+      vi.unstubAllGlobals();
+    }
   });
 
   it('renders nothing when a choice changed nothing', () => {

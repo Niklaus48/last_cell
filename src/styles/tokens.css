@@ -4,6 +4,9 @@
   --color-backdrop: #0b0e13;
   --color-surface: rgb(255 255 255 / 4%);
   --color-surface-hover: rgb(255 255 255 / 8%);
+  /* Opaque surfaces for controls that sit over moving content (choice cards). */
+  --color-surface-raised: #14181f;
+  --color-surface-raised-hover: #1b2028;
   --color-border: rgb(255 255 255 / 10%);
   --color-border-strong: rgb(255 255 255 / 22%);
 

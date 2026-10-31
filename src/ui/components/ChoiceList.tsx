@@ -10,6 +10,29 @@ interface ChoiceListProps {
 }
 
 /**
+ * A tap on a choice is the most repeated gesture in the game, so it gets:
+ * - an immediate press state and a ripple (CSS, no delay, no layout shift);
+ * - a short haptic tick where the platform offers one (silently skipped
+ *   elsewhere — `navigator.vibrate` is absent on iOS and in tests);
+ * - a staggered entrance, so the options read as arriving rather than popping.
+ *
+ * The engine commit stays synchronous: nothing here waits for an animation. The
+ * animation of "choosing" is the transition that follows.
+ */
+function tapFeedback(index: number): void {
+  const platform = globalThis.navigator as Navigator | undefined;
+  if (platform === undefined || typeof platform.vibrate !== 'function') {
+    return;
+  }
+  // Vary the tick slightly so consecutive taps do not feel mechanical.
+  try {
+    platform.vibrate([8 + (index % 3) * 3]);
+  } catch {
+    // A refused vibration must never break a choice.
+  }
+}
+
+/**
  * The decision stage.
  *
  * Two things are deliberately visible here:
@@ -50,12 +73,13 @@ export function ChoiceList({
         </p>
       )}
 
-      <ul className="choice-list" aria-label="انتخاب‌ها">
+      <ul className="choice-list choice-list--enter" aria-label="انتخاب‌ها">
         {available.map((entry, index) => (
           <ChoiceButton
             key={entry.choice.id}
             entry={entry}
             index={index}
+            order={index}
             disabled={disabled}
             onSelect={onSelect}
             variableLabels={variableLabels}
@@ -68,10 +92,11 @@ export function ChoiceList({
         <div className="locked-choices" aria-label="انتخاب‌های ناممکن">
           <p className="locked-choices__heading">راه‌هایی که اکنون بسته‌اند</p>
           <ul className="choice-list choice-list--locked">
-            {locked.map((entry) => (
+            {locked.map((entry, index) => (
               <ChoiceButton
                 key={entry.choice.id}
                 entry={entry}
+                order={available.length + index}
                 disabled
                 onSelect={onSelect}
                 variableLabels={variableLabels}
@@ -88,6 +113,7 @@ export function ChoiceList({
 function ChoiceButton({
   entry,
   index,
+  order,
   disabled,
   onSelect,
   variableLabels,
@@ -95,6 +121,8 @@ function ChoiceButton({
 }: {
   readonly entry: ChoiceAvailability;
   readonly index?: number;
+  /** Position in the list, used only to stagger the entrance. */
+  readonly order: number;
   readonly disabled: boolean;
   readonly onSelect: (choiceId: string) => void;
   readonly variableLabels: VariableLabels;
@@ -103,7 +131,7 @@ function ChoiceButton({
   const conditionLine = describeConditionLine(entry.requirements, variableLabels, clueLabels);
 
   return (
-    <li className="choice-list__item">
+    <li className="choice-list__item" style={{ ['--order' as string]: String(order) }}>
       <button
         type="button"
         // Locked entries get their own class: they are not selectable and must not
@@ -116,6 +144,7 @@ function ChoiceButton({
           if (event.detail > 1) {
             return;
           }
+          tapFeedback(order);
           onSelect(entry.choice.id);
         }}
         disabled={disabled || !entry.available}
