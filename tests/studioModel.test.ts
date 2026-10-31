@@ -132,7 +132,9 @@ describe('draft editing', () => {
   it('round-trips an empty pack back to the canonical story', () => {
     const draft = draftFromPack(EMPTY_PACK);
     expect(draft.story.scenes).toHaveLength(chapter1Story.scenes.length);
-    expect(draftToPack(draft).story?.scenes).toHaveLength(chapter1Story.scenes.length);
+    // An untouched story is written as `null`, not as a copy of the content, so
+    // the pack never shadows later edits to the TypeScript chapter.
+    expect(draftToPack(draft).story).toBeNull();
   });
 
   it('adds and removes a choice and stays valid', () => {
@@ -157,5 +159,186 @@ describe('draft editing', () => {
     expect(sceneById(on, scene.id)?.timedDecision?.durationMs).toBe(5000);
     const off = setTimedDecision(on, scene.id, null);
     expect(sceneById(off, scene.id)?.timedDecision).toBeUndefined();
+  });
+});
+
+describe('conditions and effects', () => {
+  it('adds a condition to a choice and keeps the rest of the story intact', async () => {
+    const { setChoiceCondition, newCondition } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    expect(scene).toBeDefined();
+    expect(choice).toBeDefined();
+    if (scene === undefined || choice === undefined) return;
+
+    const withCondition = setChoiceCondition(draft, scene.id, choice.id, newCondition('composure'));
+    const edited = withCondition.story.scenes.find((entry) => entry.id === scene.id)?.choices[0];
+    expect(edited?.condition).toEqual({ kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 1 });
+    // The original draft is pure: untouched by the edit.
+    expect(draft.story.scenes[0]?.choices[0]?.condition).toBe(choice.condition);
+    // …and the result is still a valid pack.
+    expect(validateContentPack(JSON.parse(JSON.stringify(draftToPack(withCondition))) as unknown).ok).toBe(true);
+  });
+
+  it('removes a condition by dropping the key, not by writing undefined', async () => {
+    const { setChoiceCondition } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes.find((entry) => entry.choices.some((c) => c.condition !== undefined));
+    const choice = scene?.choices.find((c) => c.condition !== undefined);
+    if (scene === undefined || choice === undefined) return;
+
+    const cleared = setChoiceCondition(draft, scene.id, choice.id, null);
+    const edited = cleared.story.scenes.find((entry) => entry.id === scene.id)?.choices.find((c) => c.id === choice.id);
+    expect(edited !== undefined && 'condition' in edited).toBe(false);
+    const pack = draftToPack(cleared);
+    const json = JSON.parse(JSON.stringify(pack)) as { story: { scenes: { id: string; choices: { id: string; condition?: unknown }[] }[] } };
+    const serialised = json.story.scenes.find((entry) => entry.id === scene.id)?.choices.find((c) => c.id === choice.id);
+    expect(serialised !== undefined && 'condition' in serialised).toBe(false);
+  });
+
+  it('nests an "all" condition and keeps it valid', async () => {
+    const { setChoiceCondition } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    if (scene === undefined || choice === undefined) return;
+
+    const nested = setChoiceCondition(draft, scene.id, choice.id, {
+      kind: 'all',
+      conditions: [
+        { kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 2 },
+        { kind: 'compareVariable', variable: 'guardSuspicion', operator: 'lte', value: 1 },
+      ],
+    });
+    const result = validateContentPack(JSON.parse(JSON.stringify(draftToPack(nested))) as unknown);
+    expect(result.ok).toBe(true);
+  });
+
+  it('adds, edits, reorders and removes effects', async () => {
+    const { addEffect, updateEffect, moveEffect, removeEffect } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    if (scene === undefined || choice === undefined) return;
+
+    const one = addEffect(draft, scene.id, choice.id, { kind: 'incrementVariable', variable: 'composure', amount: 1 });
+    const two = addEffect(one, scene.id, choice.id, { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 2 });
+    const list = two.story.scenes[0]?.choices[0]?.effects ?? [];
+    expect(list).toHaveLength(2);
+
+    const edited = updateEffect(two, scene.id, choice.id, 1, { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 3 });
+    expect(edited.story.scenes[0]?.choices[0]?.effects?.[1]).toEqual({ kind: 'incrementVariable', variable: 'guardSuspicion', amount: 3 });
+
+    const moved = moveEffect(edited, scene.id, choice.id, 1, -1);
+    expect(moved.story.scenes[0]?.choices[0]?.effects?.[0]).toEqual({ kind: 'incrementVariable', variable: 'guardSuspicion', amount: 3 });
+
+    const removed = removeEffect(moved, scene.id, choice.id, 0);
+    expect(removed.story.scenes[0]?.choices[0]?.effects).toHaveLength(1);
+    const emptied = removeEffect(removed, scene.id, choice.id, 0);
+    expect(emptied.story.scenes[0]?.choices[0]?.effects).toBeUndefined();
+  });
+
+  it('lets the validator refuse an increment on a non-numeric variable', async () => {
+    const { addEffect, setInitialVariable } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    if (scene === undefined || choice === undefined) return;
+
+    // Counting onto a declared number is fine…
+    const numeric = addEffect(draft, scene.id, choice.id, {
+      kind: 'incrementVariable',
+      variable: 'composure',
+      amount: 1,
+    });
+    expect(validateContentPack(JSON.parse(JSON.stringify(draftToPack(numeric))) as unknown).ok).toBe(true);
+
+    // …but an increment on a variable declared as text is a story error, and the
+    // pack validator is what stops it reaching the game.
+    const textual = addEffect(setInitialVariable(draft, 'composure', 0), scene.id, choice.id, {
+      kind: 'incrementVariable',
+      variable: 'composure',
+      amount: 1,
+    });
+    expect(validateContentPack(JSON.parse(JSON.stringify(draftToPack(textual))) as unknown).ok).toBe(true);
+    expect(
+      validateContentPack(
+        JSON.parse(
+          JSON.stringify({
+            ...draftToPack(draft),
+            story: { ...draft.story, initialVariables: { ...draft.story.initialVariables, composure: 'زیاد' } },
+          }),
+        ) as unknown,
+      ).ok,
+    ).toBe(false);
+  });
+});
+
+describe('variables panel model', () => {
+  it('edits a label and an initial value', async () => {
+    const { setVariableMeta, setInitialVariable } = await import('../src/studio/model');
+    const draft = createDraft();
+    const labelled = setVariableMeta(draft, 'composure', { label: 'آرامش', hint: 'توضیح' });
+    expect(labelled.story.variableMeta?.['composure']?.label).toBe('آرامش');
+    const valued = setInitialVariable(labelled, 'composure', 5);
+    expect(valued.story.initialVariables?.['composure']).toBe(5);
+    expect(validateContentPack(JSON.parse(JSON.stringify(draftToPack(valued))) as unknown).ok).toBe(true);
+  });
+
+  it('adds a variable and refuses a duplicate name', async () => {
+    const { addVariable, variableNames } = await import('../src/studio/model');
+    const draft = createDraft();
+    const added = addVariable(draft, 'newMetric');
+    expect(variableNames(added)).toContain('newMetric');
+    expect(added.story.initialVariables?.['newMetric']).toBe(0);
+    expect(addVariable(added, 'newMetric')).toBe(added);
+    expect(addVariable(added, '   ')).toBe(added);
+  });
+
+  it('reports where a variable is used and refuses to delete it', async () => {
+    const { variableUsages, removeVariable } = await import('../src/studio/model');
+    const draft = createDraft();
+    const usages = variableUsages(draft, 'guardSuspicion');
+    expect(usages.length).toBeGreaterThan(0);
+    expect(usages.join(' ')).toContain('ch1-door-attempt');
+    expect(removeVariable(draft, 'guardSuspicion')).toBe(draft);
+  });
+
+  it('deletes an unused variable', async () => {
+    const { addVariable, removeVariable, variableNames } = await import('../src/studio/model');
+    const draft = addVariable(createDraft(), 'unusedMetric');
+    const cleaned = removeVariable(draft, 'unusedMetric');
+    expect(variableNames(cleaned)).not.toContain('unusedMetric');
+    expect(cleaned.story.variableMeta?.['unusedMetric']).toBeUndefined();
+    expect(validateContentPack(JSON.parse(JSON.stringify(draftToPack(cleaned))) as unknown).ok).toBe(true);
+  });
+
+  it('survives a JSON export/import round trip with the edits in place', async () => {
+    const { addEffect, setChoiceCondition, importPackJson, setVariableMeta } = await import('../src/studio/model');
+    const draft = createDraft();
+    const scene = draft.story.scenes[0];
+    const choice = scene?.choices[0];
+    if (scene === undefined || choice === undefined) return;
+
+    const edited = addEffect(
+      setChoiceCondition(setVariableMeta(draft, 'composure', { label: 'آرامش' }), scene.id, choice.id, {
+        kind: 'compareVariable',
+        variable: 'composure',
+        operator: 'gte',
+        value: 2,
+      }),
+      scene.id,
+      choice.id,
+      { kind: 'discoverClue', clueId: 'dated_note' },
+    );
+
+    const reimported = importPackJson(JSON.stringify(draftToPack(edited)));
+    expect(reimported.ok).toBe(true);
+    if (!reimported.ok) return;
+    const back = reimported.draft.story.scenes[0]?.choices[0];
+    expect(back?.condition).toEqual({ kind: 'compareVariable', variable: 'composure', operator: 'gte', value: 2 });
+    expect(back?.effects).toEqual([{ kind: 'discoverClue', clueId: 'dated_note' }]);
+    expect(reimported.draft.story.variableMeta?.['composure']?.label).toBe('آرامش');
   });
 });

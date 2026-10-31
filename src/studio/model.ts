@@ -9,10 +9,15 @@
  * what the game loads — no hidden merge rules, no partial files.
  */
 import type {
+  ChoiceCondition,
   ChoiceDefinition,
   ChoiceOutcome,
+  ComparisonOperator,
   SceneDefinition,
+  StateEffect,
+  StateValue,
   StoryDefinition,
+  VariableMeta,
 } from '../story/engine';
 import { chapter1Story } from '../story/content/chapter1';
 import { EMPTY_PACK, type ContentPack, type SceneAudio } from '../story/content/pack/types';
@@ -86,10 +91,23 @@ export function createDraft(): StudioDraft {
   };
 }
 
+const CANONICAL_JSON = JSON.stringify(CANONICAL_STORY);
+
+/**
+ * True when the draft's story is byte-for-byte the canonical chapter.
+ *
+ * An unedited story is written as `"story": null` rather than as a 40 KB copy of
+ * the content: the same meaning, a readable diff, and no chance of the pack
+ * quietly shadowing future edits to the TypeScript content.
+ */
+function isCanonicalStory(story: StoryDefinition): boolean {
+  return JSON.stringify(story) === CANONICAL_JSON;
+}
+
 export function draftToPack(draft: StudioDraft): ContentPack {
   return {
     ...EMPTY_PACK,
-    story: draft.story,
+    story: isCanonicalStory(draft.story) ? null : draft.story,
     flow: { readingPauseMs: draft.readingPauseMs },
     presentation: { overrides: draft.presentation, assets: draft.artwork },
     audio: { assets: draft.audioAssets, scenes: draft.sceneAudio },
@@ -314,6 +332,217 @@ function declareAudio(draft: StudioDraft, assetId: string | undefined): StudioDr
   }
   return { ...draft, audioAssets: { ...draft.audioAssets, [assetId]: null } };
 }
+
+// ------------------------------------------------------ conditions & effects --
+
+/** Copies a record without one key (a lint-clean `delete` for readonly data). */
+function without<T extends object, K extends keyof T>(value: T, key: K): Omit<T, K> {
+  const copy = { ...value };
+  delete copy[key];
+  return copy;
+}
+
+function withChoice(
+  draft: StudioDraft,
+  sceneId: string,
+  choiceId: string,
+  update: (choice: ChoiceDefinition) => ChoiceDefinition,
+): StudioDraft {
+  return withScene(draft, sceneId, (scene) => ({
+    ...scene,
+    choices: scene.choices.map((choice) => (choice.id === choiceId ? update(choice) : choice)),
+  }));
+}
+
+/** Replaces (or removes) the availability rule of one choice. */
+export function setChoiceCondition(
+  draft: StudioDraft,
+  sceneId: string,
+  choiceId: string,
+  condition: ChoiceCondition | null,
+): StudioDraft {
+  return withChoice(draft, sceneId, choiceId, (choice) => {
+    if (condition !== null) {
+      return { ...choice, condition };
+    }
+    // Dropping the key, not setting it to undefined: the engine treats an absent
+    // condition as "always available", and `exactOptionalPropertyTypes` agrees.
+    return without(choice, 'condition');
+  });
+}
+
+/** Appends an effect to a choice. */
+export function addEffect(draft: StudioDraft, sceneId: string, choiceId: string, effect: StateEffect): StudioDraft {
+  return withChoice(draft, sceneId, choiceId, (choice) => ({
+    ...choice,
+    effects: [...(choice.effects ?? []), effect],
+  }));
+}
+
+export function updateEffect(
+  draft: StudioDraft,
+  sceneId: string,
+  choiceId: string,
+  index: number,
+  effect: StateEffect,
+): StudioDraft {
+  return withChoice(draft, sceneId, choiceId, (choice) => ({
+    ...choice,
+    effects: (choice.effects ?? []).map((current, i) => (i === index ? effect : current)),
+  }));
+}
+
+/** Reorders effects: the engine applies them in order, so order is meaning. */
+export function moveEffect(
+  draft: StudioDraft,
+  sceneId: string,
+  choiceId: string,
+  index: number,
+  direction: -1 | 1,
+): StudioDraft {
+  return withChoice(draft, sceneId, choiceId, (choice) => {
+    const effects = [...(choice.effects ?? [])];
+    const target = index + direction;
+    if (target < 0 || target >= effects.length) {
+      return choice;
+    }
+    const [moved] = effects.splice(index, 1);
+    if (moved === undefined) {
+      return choice;
+    }
+    effects.splice(target, 0, moved);
+    return { ...choice, effects };
+  });
+}
+
+export function removeEffect(
+  draft: StudioDraft,
+  sceneId: string,
+  choiceId: string,
+  index: number,
+): StudioDraft {
+  return withChoice(draft, sceneId, choiceId, (choice) => {
+    const effects = (choice.effects ?? []).filter((_, i) => i !== index);
+    // An empty list is the same as no effects; keep the data minimal.
+    return effects.length === 0 ? without(choice, 'effects') : { ...choice, effects };
+  });
+}
+
+/** A sensible starting condition: a numeric threshold on the first variable. */
+export function newCondition(variable: string): ChoiceCondition {
+  return { kind: 'compareVariable', variable, operator: 'gte', value: 1 };
+}
+
+// ------------------------------------------------------------- variables ------
+
+function withStory(draft: StudioDraft, update: (story: StoryDefinition) => StoryDefinition): StudioDraft {
+  return { ...draft, story: update(draft.story) };
+}
+
+export function variableNames(draft: StudioDraft): readonly string[] {
+  return Object.keys(draft.story.initialVariables ?? {});
+}
+
+export function initialVariable(draft: StudioDraft, name: string): StateValue | undefined {
+  return (draft.story.initialVariables ?? {})[name];
+}
+
+export function setInitialVariable(
+  draft: StudioDraft,
+  name: string,
+  value: StateValue,
+): StudioDraft {
+  return withStory(draft, (story) => ({
+    ...story,
+    initialVariables: { ...(story.initialVariables ?? {}), [name]: value },
+  }));
+}
+
+export function setVariableMeta(
+  draft: StudioDraft,
+  name: string,
+  meta: VariableMeta,
+): StudioDraft {
+  return withStory(draft, (story) => ({
+    ...story,
+    variableMeta: { ...(story.variableMeta ?? {}), [name]: meta },
+  }));
+}
+
+/** Adds a numeric variable (0) with a label; no-op when the name is taken. */
+export function addVariable(draft: StudioDraft, name: string): StudioDraft {
+  const trimmed = name.trim();
+  if (trimmed === '' || Object.prototype.hasOwnProperty.call(draft.story.initialVariables ?? {}, trimmed)) {
+    return draft;
+  }
+  return withStory(draft, (story) => ({
+    ...story,
+    initialVariables: { ...(story.initialVariables ?? {}), [trimmed]: 0 },
+    variableMeta: { ...(story.variableMeta ?? {}), [trimmed]: { label: trimmed } },
+  }));
+}
+
+/**
+ * Everything that would break if a variable disappeared: a condition on it, an
+ * effect on it, or a label for it. The studio refuses the delete and says where.
+ */
+export function variableUsages(draft: StudioDraft, name: string): readonly string[] {
+  const usages: string[] = [];
+  const walk = (condition: ChoiceCondition, where: string): void => {
+    switch (condition.kind) {
+      case 'compareVariable':
+        if (condition.variable === name) usages.push(where);
+        return;
+      case 'not':
+        walk(condition.condition, where);
+        return;
+      case 'all':
+      case 'any':
+        condition.conditions.forEach((child) => walk(child, where));
+        return;
+      case 'always':
+      case 'clueDiscovered':
+      case 'visitedScene':
+        return;
+    }
+  };
+
+  for (const scene of draft.story.scenes) {
+    for (const choice of scene.choices) {
+      const where = `${scene.id} / ${choice.id}`;
+      if (choice.condition !== undefined) {
+        walk(choice.condition, `${where} (شرط)`);
+      }
+      for (const effect of choice.effects ?? []) {
+        if ('variable' in effect && effect.variable === name) {
+          usages.push(`${where} (اثر)`);
+        }
+      }
+    }
+  }
+  return usages;
+}
+
+export function removeVariable(draft: StudioDraft, name: string): StudioDraft {
+  if (variableUsages(draft, name).length > 0) {
+    return draft;
+  }
+  return withStory(draft, (story) => ({
+    ...story,
+    initialVariables: without(story.initialVariables ?? {}, name as never),
+    variableMeta: without(story.variableMeta ?? {}, name as never),
+  }));
+}
+
+/** Operators the studio offers, with the Persian meaning shown next to them. */
+export const OPERATORS: readonly { readonly value: ComparisonOperator; readonly label: string }[] = [
+  { value: 'gte', label: '≤ بزرگ‌تر یا برابر' },
+  { value: 'gt', label: '< بزرگ‌تر از' },
+  { value: 'lte', label: '≥ کوچک‌تر یا برابر' },
+  { value: 'lt', label: '> کوچک‌تر از' },
+  { value: 'eq', label: '= برابر' },
+  { value: 'neq', label: '≠ نابرابر' },
+];
 
 export function setSceneAudio(
   draft: StudioDraft,

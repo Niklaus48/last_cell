@@ -28,14 +28,25 @@ import {
   sceneById,
   setNarrationParagraph,
   setReadingPause,
+  addEffect,
+  addVariable,
+  moveEffect,
+  removeEffect,
+  removeVariable,
+  setChoiceCondition,
+  setInitialVariable,
   setSceneAudio,
   setTimedDecision,
+  setVariableMeta,
+  updateEffect,
   updateChoice,
   updatePresentation,
   updateScene,
   type StudioDraft,
 } from './model';
 import { StoryTreeView } from './StoryTreeView';
+import { VariablesPanel } from './VariablesPanel';
+import type { ChoiceCondition, StateEffect, StateValue, VariableMeta } from '../story/engine';
 import { SceneEditor } from './SceneEditor';
 import { validateContentPack } from '../story/content/pack/validate';
 import type { ContentPack } from '../story/content/pack/types';
@@ -57,6 +68,11 @@ export function StudioApp(): React.ReactElement {
   const [importErrors, setImportErrors] = useState<readonly string[]>([]);
   /** True while a file is being dragged over the page. */
   const [dragging, setDragging] = useState(false);
+  /**
+   * Hypothetical variable values for the condition tester. Page state, not draft
+   * state: trying a condition is not an edit, and must never be saved.
+   */
+  const [testValues, setTestValues] = useState<Record<string, number>>({});
 
   const update = useCallback((next: StudioDraft) => {
     setDraft(next);
@@ -125,6 +141,16 @@ export function StudioApp(): React.ReactElement {
       ) => update(updatePresentation(draft, sceneId, patch)),
       setSceneAudio: (sceneId: string, audio: Parameters<typeof setSceneAudio>[2]) =>
         update(setSceneAudio(draft, sceneId, audio)),
+      setCondition: (sceneId: string, choiceId: string, condition: ChoiceCondition | null) =>
+        update(setChoiceCondition(draft, sceneId, choiceId, condition)),
+      addEffect: (sceneId: string, choiceId: string, effect: StateEffect) =>
+        update(addEffect(draft, sceneId, choiceId, effect)),
+      updateEffect: (sceneId: string, choiceId: string, index: number, effect: StateEffect) =>
+        update(updateEffect(draft, sceneId, choiceId, index, effect)),
+      removeEffect: (sceneId: string, choiceId: string, index: number) =>
+        update(removeEffect(draft, sceneId, choiceId, index)),
+      moveEffect: (sceneId: string, choiceId: string, index: number, direction: -1 | 1) =>
+        update(moveEffect(draft, sceneId, choiceId, index, direction)),
     }),
     [draft, update],
   );
@@ -342,12 +368,23 @@ export function StudioApp(): React.ReactElement {
                 scene={selectedScene}
                 update={update}
                 mutators={mutators}
+                testValues={testValues}
+                onTestValuesChange={setTestValues}
               />
             )}
           </section>
         </main>
 
         <aside className="studio__side">
+          <h2 className="editor__heading">متغیرها</h2>
+          <VariablesPanel
+            draft={draft}
+            onChangeLabel={(name: string, meta: VariableMeta) => update(setVariableMeta(draft, name, meta))}
+            onChangeInitial={(name: string, value: StateValue) => update(setInitialVariable(draft, name, value))}
+            onAdd={(name: string) => update(addVariable(draft, name))}
+            onRemove={(name: string) => update(removeVariable(draft, name))}
+          />
+
           <h2 className="editor__heading">پیش‌نمایش صحنه</h2>
           {selectedScene !== null && (
             <>

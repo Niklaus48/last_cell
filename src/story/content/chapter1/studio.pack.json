@@ -6,7 +6,46 @@
     "readingPauseMs": {}
   },
   "presentation": {
-    "overrides": [],
+    "overrides": [
+      {
+        "sceneId": "ch1-stranger-arrives",
+        "camera": "none",
+        "overlay": "cold",
+        "focus": {
+          "x": 50,
+          "y": 35
+        }
+      },
+      {
+        "sceneId": "ch1-corridor-first",
+        "camera": "pan-right",
+        "overlay": "haze"
+      },
+      {
+        "sceneId": "ch1-locked-door",
+        "camera": "none",
+        "overlay": "cold",
+        "focus": {
+          "x": 50,
+          "y": 60
+        }
+      },
+      {
+        "sceneId": "ch1-door-attempt",
+        "camera": "none",
+        "overlay": "cold",
+        "transition": "fade"
+      },
+      {
+        "sceneId": "ch1-final-approach",
+        "camera": "slow-zoom-out",
+        "overlay": "cold",
+        "focus": {
+          "x": 50,
+          "y": 40
+        }
+      }
+    ],
     "assets": {}
   },
   "audio": {

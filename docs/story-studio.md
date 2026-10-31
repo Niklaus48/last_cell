@@ -63,6 +63,9 @@ it before it becomes the game's content.
 | Scene text | `story.scenes[].narration`, `.title` | paragraphs can be added, removed, reordered |
 | Branching | `story.scenes[].choices[].outcome` | retarget any choice to any scene, ending or failure |
 | Timed decisions | `story.scenes[].timedDecision` | duration + which choice a timeout picks |
+| Conditions | `story.scenes[].choices[].condition` | `compareVariable`, `clueDiscovered`, `visitedScene`, `not`, `all`, `any` — with a live tester |
+| Effects | `story.scenes[].choices[].effects[]` | increment / set / unset a variable, or discover a clue; order is preserved |
+| Variables | `story.initialVariables`, `story.variableMeta` | starting values and the Persian name the player sees |
 | Reading pace | `flow.readingPauseMs[sceneId]` | overrides the paragraph-scaled default for one scene |
 | Artwork | `presentation.assets` + `presentation.overrides[].assetId` | one image per scene; camera/overlay/transition/focus too |
 | Narrator voice | `audio.scenes[sceneId].voice` | one track per scene, plays with the scene |
@@ -74,6 +77,28 @@ simply silent, not invalid. `src/audio/audioManifest.ts` turns an id into a URL.
 
 Sound never affects progression: a missing file, a decode error or a blocked
 autoplay policy just means silence.
+
+## Conditions and variables
+
+Each choice in the scene editor has two collapsible rows:
+
+- **شرط باز شدن** — the availability rule, edited as the tree the engine actually
+  uses (`all` / `any` / `not` nest; the editor never flattens a group). Underneath,
+  a **tester** shows the verdict for hypothetical values: type `12` next to
+  «خون‌سردی» and watch the rule flip from «بسته می‌ماند» to «باز می‌شود». It starts
+  from the story's real starting values, and it is page state — never saved.
+- **اثر این گزینه** — the ordered list of effects the engine applies when the
+  choice is taken. Order matters (`+1` then `set 0` is not `set 0` then `+1`), so
+  rows can move.
+
+The **متغیرها** panel in the side column lists every declared variable with its
+Persian label, one-line meaning and starting value. A variable that is still
+referenced by a condition or an effect shows how many references it has and its
+delete button is disabled (with the locations in the tooltip): deleting it would
+make the pack invalid, and hunting for the reference by hand is not reasonable.
+
+An unedited story is written to the pack as `"story": null`, so a "no edits"
+apply produces a two-line diff instead of a 40 KB copy of the content.
 
 ## Files
 

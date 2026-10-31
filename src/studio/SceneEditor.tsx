@@ -20,11 +20,17 @@ import {
   presentationFor,
   type StudioDraft,
 } from './model';
+import { ConditionEditor } from './ConditionEditor';
+import { EffectEditor } from './EffectEditor';
+import type { ChoiceCondition, StateEffect } from '../story/engine';
 
 interface SceneEditorProps {
   readonly draft: StudioDraft;
   readonly scene: SceneDefinition;
   readonly update: (next: StudioDraft) => void;
+  /** Hypothetical values for the condition tester, shared across the page. */
+  readonly testValues: Readonly<Record<string, number>>;
+  readonly onTestValuesChange: (values: Readonly<Record<string, number>>) => void;
   readonly mutators: {
     readonly updateScene: (sceneId: string, patch: { title?: string; backgroundAssetId?: string }) => void;
     readonly setParagraph: (sceneId: string, index: number, text: string) => void;
@@ -50,6 +56,11 @@ interface SceneEditorProps {
         focus?: { x: number; y: number };
       },
     ) => void;
+    readonly setCondition: (sceneId: string, choiceId: string, condition: ChoiceCondition | null) => void;
+    readonly addEffect: (sceneId: string, choiceId: string, effect: StateEffect) => void;
+    readonly updateEffect: (sceneId: string, choiceId: string, index: number, effect: StateEffect) => void;
+    readonly removeEffect: (sceneId: string, choiceId: string, index: number) => void;
+    readonly moveEffect: (sceneId: string, choiceId: string, index: number, direction: -1 | 1) => void;
     readonly setSceneAudio: (
       sceneId: string,
       audio: { voice?: string; sfx?: readonly { assetId: string; atMs: number; volume?: number }[] },
@@ -75,7 +86,14 @@ function parseTarget(value: string): ChoiceOutcome {
   return { type: 'transition', targetSceneId: id };
 }
 
-export function SceneEditor({ draft, scene, update, mutators }: SceneEditorProps): React.ReactElement {
+export function SceneEditor({
+  draft,
+  scene,
+  update,
+  mutators,
+  testValues,
+  onTestValuesChange,
+}: SceneEditorProps): React.ReactElement {
   const presentation = presentationFor(draft, scene.id);
   const audio = audioFor(draft, scene.id);
   const readingPause = draft.readingPauseMs[scene.id];
@@ -148,33 +166,77 @@ export function SceneEditor({ draft, scene, update, mutators }: SceneEditorProps
         <h2 className="editor__heading">گزینه‌ها و مسیر درخت</h2>
         {scene.choices.length === 0 && <p className="muted">این صحنه گزینه‌ای ندارد.</p>}
         {scene.choices.map((choice) => (
-          <div className="choice-row" key={choice.id}>
-            <input
-              className="field__input"
-              value={choice.label}
-              aria-label={`متن گزینه ${choice.id}`}
-              onChange={(event) => mutators.updateChoiceLabel(scene.id, choice.id, event.target.value)}
-            />
-            <select
-              className="field__select"
-              value={targetValue(choice.outcome)}
-              aria-label={`مقصد گزینه ${choice.id}`}
-              onChange={(event) => mutators.retargetChoice(scene.id, choice.id, parseTarget(event.target.value))}
-            >
-              {targetOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="mini mini--danger"
-              onClick={() => mutators.removeChoice(scene.id, choice.id)}
-              aria-label={`حذف گزینه ${choice.id}`}
-            >
-              حذف
-            </button>
+          <div className="choice-block" key={choice.id}>
+            <div className="choice-row">
+              <input
+                className="field__input"
+                value={choice.label}
+                aria-label={`متن گزینه ${choice.id}`}
+                onChange={(event) => mutators.updateChoiceLabel(scene.id, choice.id, event.target.value)}
+              />
+              <select
+                className="field__select"
+                value={targetValue(choice.outcome)}
+                aria-label={`مقصد گزینه ${choice.id}`}
+                onChange={(event) => mutators.retargetChoice(scene.id, choice.id, parseTarget(event.target.value))}
+              >
+                {targetOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="mini mini--danger"
+                onClick={() => mutators.removeChoice(scene.id, choice.id)}
+                aria-label={`حذف گزینه ${choice.id}`}
+              >
+                حذف
+              </button>
+            </div>
+
+            <details className="choice-block__details">
+              <summary className="choice-block__summary">
+                شرط باز شدن
+                <span className={choice.condition === undefined ? 'tag tag--none' : 'tag'}>
+                  {choice.condition === undefined ? 'همیشه' : 'مشروط'}
+                </span>
+                {scene.timedDecision?.defaultChoiceId === choice.id && (
+                  <span className="tag">پیش‌فرض زمان‌دار</span>
+                )}
+              </summary>
+              <ConditionEditor
+                condition={choice.condition}
+                variables={variableNamesList(draft)}
+                variableLabels={draft.story.variableMeta ?? {}}
+                clues={draft.story.clues ?? []}
+                scenes={draft.story.scenes.map((entry) => ({ id: entry.id, title: entry.title }))}
+                onChange={(condition) => mutators.setCondition(scene.id, choice.id, condition)}
+                testValues={testValues}
+                testDefaults={draft.story.initialVariables ?? {}}
+                onTestValuesChange={onTestValuesChange}
+              />
+            </details>
+
+            <details className="choice-block__details">
+              <summary className="choice-block__summary">
+                اثر این گزینه
+                <span className={choice.effects === undefined ? 'tag tag--none' : 'tag'}>
+                  {choice.effects === undefined ? 'هیچ' : `${choice.effects.length} اثر`}
+                </span>
+              </summary>
+              <EffectEditor
+                effects={choice.effects ?? []}
+                variables={variableNamesList(draft)}
+                variableLabels={draft.story.variableMeta ?? {}}
+                clues={draft.story.clues ?? []}
+                onAdd={(effect) => mutators.addEffect(scene.id, choice.id, effect)}
+                onUpdate={(index, effect) => mutators.updateEffect(scene.id, choice.id, index, effect)}
+                onRemove={(index) => mutators.removeEffect(scene.id, choice.id, index)}
+                onMove={(index, direction) => mutators.moveEffect(scene.id, choice.id, index, direction)}
+              />
+            </details>
           </div>
         ))}
         <button type="button" className="secondary" onClick={() => mutators.addChoice(scene.id)}>
@@ -528,4 +590,9 @@ function FilePicker({
       )}
     </div>
   );
+}
+
+/** Declared variable names, in declaration order. */
+function variableNamesList(draft: StudioDraft): readonly string[] {
+  return Object.keys(draft.story.initialVariables ?? {});
 }
