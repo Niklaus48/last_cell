@@ -19,7 +19,7 @@ can be re-verified rather than trusted.
 
 ## 2. Narration
 
-* **One narrator, third person.** All 79 narration paragraphs are narrated by the same voice
+* **One narrator, third person.** All 91 narration paragraphs are narrated by the same voice
   about Kian; anything a character says is reported indirectly («مرد با آرامشی نامناسبِ این
   ساعت، به او می‌فهماند که…», «غریبه مدعی است…»). No spoken dialogue is quoted, no speaker
   labels, no dialogue windows, no first-person narration. `chapter1.content` asserts no
@@ -36,15 +36,16 @@ can be re-verified rather than trusted.
 
 ## 3. Graph shape
 
-* **37 scenes**, 84 choices (21 conditional, 62 with effects). Acts I–VII, ending scenes
-  included. The branching redesign (see §6) added five scenes and turned the corridor into a
-  set of state-dependent outcomes.
+* **43 scenes**, 91 choices (21 conditional, 63 with effects). Acts I–VII, ending scenes and
+  the six failure scenes included. The branching redesign (see §7) added five scenes and
+  turned the corridor into a set of state-dependent outcomes; the failure sequences (see §8)
+  added six more, all of them *after* a decision goes wrong.
 * **No dead ends.** Every scene has at least one unconditional choice; the only loop
   (`locked door → safe corner → corridor → locked door`) costs one `planIntegrity` per lap and
   closes when the plan is spent — the door can still be forced, so the player is never stuck.
   `chapter1.content` explores the full reachable state space; `chapter1.playthrough` walks the
   loop to exhaustion.
-* **No unreachable scene or option.** All 32 scenes, 3 endings and 2 failures are reachable;
+* **No unreachable scene or option.** All 43 scenes, 3 endings and 3 failures are reachable;
   every conditional choice is reachable on at least one path (exhaustive exploration).
 * **No assumed visited scenes.** The chapter uses no `visitedScene` conditions at all, so a
   player who skipped the office route is never asked about it. Asserted explicitly.
@@ -90,13 +91,14 @@ can be re-verified rather than trusted.
 A scripted Chromium run (Playwright, 430×900 viewport, `npm run dev`) played the office-evidence
 route end to end through the real UI — title screen → cell → stranger → note → office → ledger
 comparison → junction → door → guard → archive → final approach → **Ending B** — reaching the
-required hook sentence with **0 console errors**. The failure screen (“دفتر بازرسی‌شده”) and its
-«بازگشت به آخرین نقطهٔ امن» recovery were exercised in the same session, and a conditional option
+required hook sentence with **0 console errors**. The old single-screen failure ("دفتر
+بازرسی‌شده") has since been replaced by the sequences in §8; a later run at phone size played all
+three losses and both rewinds with 0 console errors. A conditional option
 (`search-the-old-folders`) was correctly absent once its precondition no longer held.
 
 ---
 
-## 6. Branching redesign
+## 7. Branching redesign
 
 The chapter was re-authored so that the eight variables change *events*, not just numbers:
 
@@ -114,10 +116,64 @@ New scenes: `ch1-cell-rehearsal`, `ch1-office-overheard`, `ch1-forced-door-noise
 `ch1-guard-search`, `ch1-schedule-file`. The three endings, two recoverable failures and three
 checkpoints are unchanged in id and meaning.
 
-Verification: `tests/chapter1.redesign.test.ts` (24 tests) covers all of the above, plus clue
+Verification: `tests/chapter1.redesign.test.ts` (25 tests) covers all of the above, plus clue
 numbering, the timeline (death signed 12 Mehr, transfer 14 Mehr), the timed defaults, failure
 recovery and the narrator-only rules; `tests/chapter1.content.test.ts` still proves exhaustive
 reachability (every scene, choice, ending and failure, no dead ends) over the new graph. The
 full export in `exports/chapter1.pack.full.json` is generated from this canonical content by
 `npm run pack:full`; the Studio's compact export still writes `story: null` because the
 canonical story *is* the repository content.
+
+---
+
+## 8. Failure sequences
+
+A failed decision is no longer a sudden overlay. Each of the three ways this attempt can end
+badly is now a short sequence of ordinary scenes: the mistake happens where the player can see
+it, the guards react, the attempt ends, and only then does the result screen name the cause.
+
+| Sequence | Entered from | Scenes | Ends in | Recovery |
+| --- | --- | --- | --- | --- |
+| Caught at the door | `press-the-pick` (در), `search-caught` (جست‌وجوی نگهبان) | `ch1-fail-door-detected` → `ch1-fail-door-captured` | `f-ch1-caught-at-door` (`recoverable`) | `cp-ch1-door-approach` |
+| Caught in the office | `take-the-loose-page` (دفتر انتقال) | `ch1-fail-office-exposed` → `ch1-fail-office-captured` | `f-ch1-office-alarm` (`recoverable`) | `cp-ch1-corridor-first` |
+| Killed in the corridor | `forced-dash-into-gunfire` (ضربه‌ای در سکوت) | `ch1-fail-fatal-warning` → `ch1-fail-fatal-outcome` | `f-ch1-shot-in-corridor` (`fatal`) | `cp-ch1-door-approach` (a rewind) |
+
+**Rules the content follows.**
+
+* *No failure before both scenes.* The first scene of a sequence has exactly one choice — move
+  on — and the second has exactly one: see the outcome. A player cannot reach a result screen
+  after one paragraph, and cannot skip the reading stage either (the scenes go through the same
+  narration gate as every other scene). Asserted in `chapter1.failures.test.ts` and
+  `failureSequences.ui.test.tsx`.
+* *The mistake is visible, and the risk is stated before it is taken.* `forced-dash-into-gunfire`
+  is offered with a label that says the guard is armed and the corridor is lit, and the scene
+  around it says the same thing. It is a choice, not a trap.
+* *No gore.* The fatal sequence reports the shot and the end of the attempt; it does not
+  describe the body.
+* *The result names the cause.* Each failure's title and summary say what Kian did wrong
+  (`عجله` at the door, the missing page in the office, ignoring the warning in the corridor), not
+  merely that he failed.
+
+**The schema extension: `fatal`.**
+
+`FailureKind` is now `'recoverable' | 'fatal' | 'terminal'`.
+
+* `fatal` **must** declare a `recovery` target, and that target means exactly one thing: the
+  rewind point of the attempt. Validation rejects a fatal failure without one
+  (`INVALID_RECOVERY`) and one pointing at an unknown checkpoint (`UNKNOWN_CHECKPOINT`).
+* `engine.getRecoveryTarget` returns the target for `fatal` as well as `recoverable`, and
+  `engine.recover` accepts it, restoring the captured snapshot exactly — the run continues from
+  before the mistake.
+* Nothing in the UI pretends the death was undone: the failure screen shows the tone
+  «پایان تلخ این تلاش», the button reads «بازپخش تلاش از نقطهٔ امن», and a footnote states that
+  the attempt ended with Kian's death and that the replay only rewinds the attempt. The
+  «بازگشت به سلول ۱۴» wording belongs to the recoverable door failure only.
+* `terminal` is unchanged: a failure that ends the run for good, and must not declare a
+  recovery target.
+
+Verification: `tests/chapter1.failures.test.ts` (20 engine tests: content shape, reachability,
+each sequence end to end, snapshot restore, no leaked `criticalMistakes`/suspicion/clues across
+two retry cycles, the schema rules) and `tests/failureSequences.ui.test.tsx` (5 tests through the
+real `<App />`: the result cannot appear before both scenes, the fatal copy, and both rewinds).
+A scripted Chromium run at 390×844 in RTL played all three losses and both rewinds with **0
+console errors**; the Studio shows the new graph (49 nodes, 91 links).

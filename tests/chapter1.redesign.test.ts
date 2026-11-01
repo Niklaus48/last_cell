@@ -121,9 +121,9 @@ describe('the redesigned chapter, as content', () => {
     }
   });
 
-  it('adds the five new scenes without losing a single original scene', () => {
+  it('adds the five branching scenes and the six failure scenes without losing an original one', () => {
     const ids = chapter1Story.scenes.map((scene) => scene.id);
-    expect(ids).toHaveLength(37);
+    expect(ids).toHaveLength(43);
 
     for (const newScene of [
       S.cellRehearsal,
@@ -209,7 +209,8 @@ describe('guardSuspicion decides what the corridor does', () => {
   });
 
   it('makes high suspicion itself a scene: the archive becomes alarmed', () => {
-    const run = play([...TO_DOOR, 'force-the-door', 'forced-press', 'freeze-and-observe', 'search-caught']);
+    const run = play([...TO_DOOR, 'force-the-door', 'forced-press', 'freeze-and-observe',
+      'search-caught', 'failure-door-continue', 'failure-door-result']);
     expect(run.state.progress).toEqual({
       status: 'failed',
       failureId: CHAPTER1_FAILURE.caughtAtDoor,
@@ -518,7 +519,8 @@ describe('consequences reach the endings', () => {
     if (!checkpoint.ok) return;
     expect(checkpoint.checkpoint.checkpointId).toBe(CHAPTER1_CHECKPOINT.doorApproach);
 
-    const failed = playThrough(TO_DOOR, run.engine, ['pick-the-bolt', 'freeze-and-observe', 'search-caught']);
+    const failed = playThrough(TO_DOOR, run.engine, ['pick-the-bolt', 'freeze-and-observe',
+      'search-caught', 'failure-door-continue', 'failure-door-result']);
     expect(failed.progress).toEqual({
       status: 'failed',
       failureId: CHAPTER1_FAILURE.caughtAtDoor,

@@ -51,6 +51,8 @@ const TO_FAILURE = [
   'straight-to-the-door',
   'pick-the-bolt',
   'press-the-pick',
+  'failure-door-continue',
+  'failure-door-result',
 ] as const;
 const TO_ENDING = [
   'test-the-bar',

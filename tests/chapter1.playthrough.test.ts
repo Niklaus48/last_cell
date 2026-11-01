@@ -726,6 +726,8 @@ describe('checkpoints and recoverable failures', () => {
       'look-at-the-scratches',
       'pick-the-bolt',
       'press-the-pick',
+      'failure-door-continue',
+      'failure-door-result',
     ]);
     expect(failed.progress).toEqual({
       status: 'failed',
@@ -778,6 +780,8 @@ describe('checkpoints and recoverable failures', () => {
       'slip-past-the-door',
       'read-the-transfer-ledger',
       'take-the-loose-page',
+      'failure-office-continue',
+      'failure-office-result',
     ]);
     expect(office.state.progress).toEqual({
       status: 'failed',
@@ -822,6 +826,8 @@ describe('checkpoints and recoverable failures', () => {
       'straight-to-the-door',
       'pick-the-bolt',
       'press-the-pick',
+      'failure-door-continue',
+      'failure-door-result',
     ]);
     expect(failed.state.progress.status).toBe('failed');
 

@@ -220,10 +220,15 @@ describe('presentation on the real screen', () => {
     click(/سمت چپ؛ به سمت دفتر نگهبانی/);
     click(/بی‌صدا از کنار در می‌گذرم/);
     click(/دفتر انتقال را ورق/);
-    // Taking the loose page springs the office alarm.
+    // Taking the loose page is played out first: the missing page, the guards,
+    // the arrest. Only then does the attempt end.
     click(/برگهٔ داخل پوشه را برمی‌دارم/);
+    expect(backdrop().getAttribute('data-scene-id')).toBe(CHAPTER1_SCENE.failOfficeExposed);
+    click(/به سمت خروجی عقب می‌کشم/);
+    expect(backdrop().getAttribute('data-scene-id')).toBe(CHAPTER1_SCENE.failOfficeCaptured);
+    click(/نتیجهٔ این تلاش را ببینم/);
 
-    expect(screen.getByRole('heading', { name: /دفتر بازرسی‌شده/ })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: /دستگیری در دفتر/ })).not.toBeNull();
     expect(document.querySelector('.scene-backdrop')).toBeNull();
     expect(screen.getByRole('button', { name: /بازگشت به آخرین نقطهٔ امن/ })).not.toBeNull();
   });

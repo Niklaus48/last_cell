@@ -117,11 +117,11 @@ describe('story definition', () => {
     expect(getStory('chapter1')).toBe(chapter1Story);
   });
 
-  it('has 24–40 narrative scenes, each with a unique id', () => {
+  it('has 24–44 narrative scenes, each with a unique id', () => {
     const ids = chapter1Story.scenes.map((scene) => scene.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBeGreaterThanOrEqual(24);
-    expect(ids.length).toBeLessThanOrEqual(40);
+    expect(ids.length).toBeLessThanOrEqual(44);
   });
 
   it('has unique choice ids within every scene', () => {

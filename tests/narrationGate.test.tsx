@@ -536,12 +536,14 @@ describe('save and load honour the flow', () => {
       'slip-past-the-door',
       'read-the-transfer-ledger',
       'take-the-loose-page',
+      'failure-office-continue',
+      'failure-office-result',
     ]) {
       openChoices();
       fireEvent.click(screen.getByRole('button', { name: labelOf(choiceId) }));
     }
 
-    expect(screen.getByRole('heading', { name: /دفتر بازرسی‌شده/ })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: /دستگیری در دفتر/ })).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /بازگشت به آخرین نقطهٔ امن/ }));
 
     // Recovery replays to the checkpoint scene, which starts its narration again.

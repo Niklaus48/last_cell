@@ -202,6 +202,8 @@ describe('round trip', () => {
       'straight-to-the-door',
       'pick-the-bolt',
       'press-the-pick',
+      'failure-door-continue',
+      'failure-door-result',
     ]);
     expect(failed.progress.status).toBe('failed');
 
