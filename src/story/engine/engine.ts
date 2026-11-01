@@ -238,9 +238,16 @@ export function createStoryEngine(input: StoryDefinition): StoryEngine {
     return failureById.get(state.progress.failureId) ?? null;
   };
 
+  /**
+   * The rewind point a failure offers.
+   *
+   * Both `recoverable` and `fatal` failures may be rewound — for a fatal one that
+   * is the only honest option (the attempt is over for good; what restores is the
+   * *run*, not Kian). `terminal` failures never recover.
+   */
   const getRecoveryTarget = (state: StoryState): RecoveryTarget | null => {
     const failure = getFailure(state);
-    if (failure === null || failure.kind !== 'recoverable') {
+    if (failure === null || (failure.kind !== 'recoverable' && failure.kind !== 'fatal')) {
       return null;
     }
     return failure.recovery ?? null;

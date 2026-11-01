@@ -517,12 +517,12 @@ export function validateStory(story: StoryDefinition): StoryValidationResult {
       report({ code: 'EMPTY_FIELD', path: `failures[${index}].title`, message: 'Failure title must be a non-empty string.' });
     }
 
-    if (failure.kind === 'recoverable') {
+    if (failure.kind === 'recoverable' || failure.kind === 'fatal') {
       if (failure.recovery === undefined) {
         report({
           code: 'INVALID_RECOVERY',
           path: `failures[${index}].recovery`,
-          message: `Recoverable failure "${failure.id}" must declare a recovery target.`,
+          message: `${failure.kind === 'fatal' ? 'Fatal' : 'Recoverable'} failure "${failure.id}" must declare a recovery target (the rewind point).`,
         });
       } else if (failure.recovery.type !== 'checkpoint') {
         report({

@@ -62,6 +62,8 @@ export interface FailureViewModel {
   readonly visitedCount: number;
   /** True when the failure declares a checkpoint the player could return to. */
   readonly recoverable: boolean;
+  /** Kian does not survive this attempt; any way back is a rewind, not a rescue. */
+  readonly fatal: boolean;
 }
 
 export function toFailureViewModel(
@@ -71,6 +73,9 @@ export function toFailureViewModel(
   return {
     failure,
     visitedCount: deriveVisitedSceneIds(state.history).length,
-    recoverable: failure.kind === 'recoverable' && failure.recovery !== undefined,
+    recoverable:
+      (failure.kind === 'recoverable' || failure.kind === 'fatal') &&
+      failure.recovery !== undefined,
+    fatal: failure.kind === 'fatal',
   };
 }

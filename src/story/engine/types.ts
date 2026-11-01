@@ -163,17 +163,23 @@ export type RecoveryTarget = {
 };
 
 /**
- * `recoverable` failures can be retried from `recovery`; `terminal` failures end
- * the run like an ending and must not declare a recovery target.
+ * How a failure ends the attempt.
+ *
+ * - `recoverable` — the attempt is spent (caught, cornered, thrown out), and the
+ *   chapter can be replayed from `recovery`;
+ * - `fatal` — Kian does not survive this attempt. `recovery` is still allowed and
+ *   means exactly one thing: *rewind* to before the fatal decision. It is never
+ *   an in-universe rescue, so a fatal failure must not be presented as survival;
+ * - `terminal` — the run stops for good and must not declare a recovery target.
  */
-export type FailureKind = 'recoverable' | 'terminal';
+export type FailureKind = 'recoverable' | 'fatal' | 'terminal';
 
 export interface FailureDefinition {
   readonly id: FailureId;
   readonly title: string;
   readonly summary: string;
   readonly kind: FailureKind;
-  /** Required for `recoverable`, forbidden for `terminal`. */
+  /** Required for `recoverable` and `fatal`, forbidden for `terminal`. */
   readonly recovery?: RecoveryTarget;
 }
 

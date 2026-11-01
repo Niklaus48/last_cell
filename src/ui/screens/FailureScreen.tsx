@@ -10,8 +10,19 @@ interface FailureScreenProps {
 }
 
 /**
- * Shown for engine-reported failures. Reuses the ending layout on purpose: this
- * phase is about engine behaviour, not a new visual design.
+ * The result of a failed attempt.
+ *
+ * By the time this screen exists the player has already *read* the failure: the
+ * mistake, the guards' reaction and the end of the attempt are scenes like any
+ * other (see `scenes.failures.ts`), and the last thing they chose was to see the
+ * outcome. So this screen never re-narrates the sequence — it names the cause,
+ * says what it cost, and offers the only two honest ways forward:
+ *
+ * - «بازگشت به نقطهٔ امن» — a rewind of the attempt to the captured snapshot;
+ * - «بازگشت به آغاز» — a new run.
+ *
+ * A fatal failure is worded separately: Kian did not get out of this one, so the
+ * rewind is explicitly a rewind — never a rescue or a return to the cell.
  */
 export function FailureScreen({
   view,
@@ -22,7 +33,7 @@ export function FailureScreen({
   return (
     <main className="screen screen--ending" aria-label="شکست روایت">
       <p className="ending-tone">
-        {view.recoverable ? 'شکست قابل جبران' : 'شکست پایانی'}
+        {view.fatal ? 'پایان تلخ این تلاش' : view.recoverable ? 'شکست قابل جبران' : 'شکست پایانی'}
       </p>
       <h1 className="ending-title">{view.failure.title}</h1>
       <p className="ending-summary">{view.failure.summary}</p>
@@ -41,8 +52,15 @@ export function FailureScreen({
           onClick={onRecover}
           disabled={!canRecover}
         >
-          بازگشت به آخرین نقطهٔ امن
+          {view.fatal ? 'بازپخش تلاش از نقطهٔ امن' : 'بازگشت به آخرین نقطهٔ امن'}
         </button>
+      )}
+
+      {view.fatal && (
+        <p className="ending-footnote">
+          این تلاش با مرگ کیان پایان یافت؛ چیزی برای بازگرداندن او نیست. بازپخش، همین تلاش را از
+          پیش از تصمیم آخر برمی‌گرداند.
+        </p>
       )}
 
       {view.recoverable && !canRecover && (
