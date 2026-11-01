@@ -8,7 +8,7 @@
  * only way through; and plan integrity decides how many retreats are left.
  */
 import type { SceneDefinition } from '../../engine';
-import { CHAPTER1_CLUE as C, CHAPTER1_FAILURE, CHAPTER1_SCENE as S } from './ids';
+import { CHAPTER1_CLUE as C, CHAPTER1_SCENE as S } from './ids';
 
 export const routeScenes: readonly SceneDefinition[] = [
   {
@@ -146,7 +146,9 @@ export const routeScenes: readonly SceneDefinition[] = [
       {
         id: 'take-the-loose-page',
         label: 'برگهٔ داخل پوشه را برمی‌دارم.',
-        outcome: { type: 'failure', failureId: CHAPTER1_FAILURE.officeAlarm },
+        // Not an instant result screen: the missing page is noticed first, then
+        // the arrest is played out, and only then does the attempt end.
+        outcome: { type: 'transition', targetSceneId: S.failOfficeExposed },
         effects: [
           { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
           { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
@@ -379,8 +381,8 @@ export const routeScenes: readonly SceneDefinition[] = [
       },
       {
         id: 'press-the-pick',
-        label: 'همین حالا زبانه را فشار دهد.',
-        outcome: { type: 'failure', failureId: CHAPTER1_FAILURE.caughtAtDoor },
+        label: 'همین حالا زبانه را فشار می‌دهم.',
+        outcome: { type: 'transition', targetSceneId: S.failDoorDetected },
         effects: [
           { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
           { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
@@ -473,8 +475,8 @@ export const routeScenes: readonly SceneDefinition[] = [
       },
       {
         id: 'search-caught',
-        label: 'عجولانه از پشت چارچوب حرکت کند.',
-        outcome: { type: 'failure', failureId: CHAPTER1_FAILURE.caughtAtDoor },
+        label: 'عجولانه از پشت چارچوب حرکت می‌کنم.',
+        outcome: { type: 'transition', targetSceneId: S.failDoorDetected },
         effects: [
           { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
         ],
@@ -509,8 +511,20 @@ export const routeScenes: readonly SceneDefinition[] = [
         ],
       },
       {
+        id: 'forced-dash-into-gunfire',
+        // A visible, avoidable risk, offered on purpose: the narration says the
+        // corridor is lit and the guard is armed, and the label says the same.
+        // Choosing it is the only way into the chapter's fatal failure.
+        label: 'با وجود نگهبان مسلح، از راهروی روشن به سمت خروجی می‌دوم.',
+        outcome: { type: 'transition', targetSceneId: S.failFatalWarning },
+        effects: [
+          { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },
+          { kind: 'incrementVariable', variable: 'guardSuspicion', amount: 1 },
+        ],
+      },
+      {
         id: 'forced-press',
-        label: 'با وجود صدا دوباره به در فشار بیاورد.',
+        label: 'با وجود صدا دوباره به در فشار می‌آورم.',
         outcome: { type: 'transition', targetSceneId: S.doorAttempt },
         effects: [
           { kind: 'incrementVariable', variable: 'criticalMistakes', amount: 1 },

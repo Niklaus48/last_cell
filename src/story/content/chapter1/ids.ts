@@ -61,6 +61,14 @@ export const CHAPTER1_SCENE = {
   endingEvidence: 'ch1-ending-evidence',
   endingConnection: 'ch1-ending-connection',
   endingThin: 'ch1-ending-thin',
+
+  // Failure sequences: played out, never cut to a result screen.
+  failDoorDetected: 'ch1-fail-door-detected',
+  failDoorCaptured: 'ch1-fail-door-captured',
+  failOfficeExposed: 'ch1-fail-office-exposed',
+  failOfficeCaptured: 'ch1-fail-office-captured',
+  failFatalWarning: 'ch1-fail-fatal-warning',
+  failFatalOutcome: 'ch1-fail-fatal-outcome',
 } as const;
 
 export const CHAPTER1_ENDING = {
@@ -95,6 +103,8 @@ export const CHAPTER1_FAILURE = {
   caughtAtDoor: 'f-ch1-caught-at-door',
   /** Slipping the transfer page out of a folder that is audited nightly. */
   officeAlarm: 'f-ch1-office-alarm',
+  /** Running the lit corridor at an armed guard. Fatal for this attempt. */
+  shotInCorridor: 'f-ch1-shot-in-corridor',
 } as const;
 
 /**

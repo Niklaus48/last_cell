@@ -9,6 +9,7 @@
 import type { StoryDefinition } from '../../engine';
 import { chapter1Checkpoints, chapter1Endings, chapter1Failures } from './endings';
 import { CHAPTER1_SCENE, chapter1Clues } from './ids';
+import { failureScenes } from './scenes.failures';
 import { finaleScenes } from './scenes.finale';
 import { chapter1VariableMeta } from './variables';
 import { onsetScenes } from './scenes.onset';
@@ -47,7 +48,7 @@ export const chapter1Story: StoryDefinition = {
   clues: chapter1Clues,
   checkpoints: chapter1Checkpoints,
   failures: chapter1Failures,
-  scenes: [...onsetScenes, ...routeScenes, ...finaleScenes],
+  scenes: [...onsetScenes, ...routeScenes, ...finaleScenes, ...failureScenes],
   endings: chapter1Endings,
 };
 

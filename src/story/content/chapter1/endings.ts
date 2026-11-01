@@ -52,18 +52,29 @@ export const chapter1Checkpoints: readonly CheckpointDefinition[] = [
 export const chapter1Failures: readonly FailureDefinition[] = [
   {
     id: CHAPTER1_FAILURE.caughtAtDoor,
-    title: 'شکست قابل جبران — صدای فلز',
+    title: 'فرار شکست خورد — بازگشت به سلول ۱۴',
     summary:
-      'فلز با صدایی خشک به چارچوب می‌خورد. نگهبان می‌ایستد، چراغ را برمی‌گرداند و قدم‌هایش نزدیک‌تر می‌شوند. کیان پیش از آنکه دیده شود عقب می‌کشد؛ این تلاش از دست رفته است.',
+      'صدای قفل لو رفت. نگهبان‌ها کیان را در دهلیز گرفتند و به سلول ۱۴ برگرداندند. این تلاش به دلیل عجله هنگام باز کردن در شکست خورد.',
     kind: 'recoverable',
     recovery: { type: 'checkpoint', checkpointId: CHAPTER1_CHECKPOINT.doorApproach },
   },
   {
     id: CHAPTER1_FAILURE.officeAlarm,
-    title: 'شکست قابل جبران — دفتر بازرسی‌شده',
+    title: 'فرار شکست خورد — دستگیری در دفتر',
     summary:
-      'برداشتن برگه بی‌صدا انجام می‌شود، اما جای خالی آن خیلی زود توجه نگهبان‌ها را جلب می‌کند. صدای ورق‌خوردن دفتر و قدم‌های نزدیک‌شونده کیان را مجبور به عقب‌نشینی می‌کند.',
+      'برداشتن برگه، جای خالی آشکاری گذاشت. نگهبان‌ها کیان را در دفتر گرفتند، بازجویی کردند و به سلول بازگرداندند.',
     kind: 'recoverable',
     recovery: { type: 'checkpoint', checkpointId: CHAPTER1_CHECKPOINT.corridorFirst },
+  },
+  {
+    id: CHAPTER1_FAILURE.shotInCorridor,
+    title: 'پایان تلخ — کشته شدن در راهرو',
+    summary:
+      'کیان هشدار نگهبان مسلح را نادیده گرفت و در راهروی بدون پناه دوید. شلیک پیش از رسیدن او به در، زندگی‌اش را پایان داد.',
+    // `fatal`, not `recoverable`: Kian does not come back to Cell 14 in this
+    // attempt. The recovery target is the rewind point — the run is restored, the
+    // outcome is not undone in the fiction.
+    kind: 'fatal',
+    recovery: { type: 'checkpoint', checkpointId: CHAPTER1_CHECKPOINT.doorApproach },
   },
 ];
